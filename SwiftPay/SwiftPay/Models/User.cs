@@ -23,13 +23,13 @@ namespace Model
 	{
 		public Guid UserId { get; set; }
 
-		public string Name { get; set; } = string.Empty;
+		public string Name { get; set; }
 
 		public UserRole Role { get; set; }
 
-		public string Email { get; set; } = string.Empty;
+		public string Email { get; set; }
 
-		public string Phone { get; set; } = string.Empty;
+		public string Phone { get; set; }
 
 		public UserStatus Status { get; set; }
 	}

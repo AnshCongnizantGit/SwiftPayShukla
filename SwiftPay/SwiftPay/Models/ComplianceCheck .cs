@@ -1,41 +1,27 @@
 ﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.ComponentModel.DataAnnotations.Schema;
 
 namespace SwiftPay.Domain.Remittance.Entities
 {
     public class ComplianceCheck
     {
-        [Key]
-        [MaxLength(64)]
-        public string CheckId { get; set; } = default!;
+        public string CheckId { get; set; }
 
         // Foreign Key to RemittanceRequest
-        [Required]
-        [MaxLength(64)]
-        public string RemitId { get; set; } = default!;
+        public string RemitId { get; set; }
 
         // Check Type: Sanctions, PEP, AML, Geo
-        [Required]
-        [MaxLength(32)]
-        public string CheckType { get; set; } = default!;
+        public string CheckType { get; set; }
 
         // Result: Clear, Flag, Hold
-        [Required]
-        [MaxLength(20)]
-        public string Result { get; set; } = default!;
+        public string Result { get; set; }
 
         // Severity: Low, Medium, High
-        [Required]
-        [MaxLength(20)]
-        public string Severity { get; set; } = default!;
+        public string Severity { get; set; }
 
-        [Required]
-        public DateTimeOffset CheckedDate { get; set; } = DateTimeOffset.UtcNow;
+        public DateTimeOffset CheckedDate { get; set; }
 
         // Optimistic concurrency to prevent race conditions during compliance updates
-        [Timestamp]
-        public byte[] RowVersion { get; set; } = Array.Empty<byte>();
+        public byte[] RowVersion { get; set; }
 
         // Navigation Property (Optional but recommended in .NET EF Core)
         // [ForeignKey("RemitId")]
