@@ -1,4 +1,5 @@
 ﻿using System;
+using SwiftPay.Constants.Enums;
 //using SwiftPay.Domain.Remittance.Enums;
 
 namespace SwiftPay.Domain.Remittance.Entities
@@ -40,17 +41,12 @@ namespace SwiftPay.Domain.Remittance.Entities
 		public string? SourceOfFunds { get; set; }
 
 		// Status & lifecycle
-		//public RemittanceStatus Status { get; set; } = RemittanceStatus.Draft;
+		public RemittanceRequestStatus Status { get; set; }
 
 		public DateTimeOffset CreatedDate { get; set; }
+		public DateTimeOffset UpdateDate { get; set; }
 
-		public string PurposeCode { get; set; }      // required, non-empty
-		public string SourceOfFunds { get; set; }    // required, non-empty
-
-		// Audit
-		public string? CreatedByUserId { get; set; }
-
-		public string? UpdatedByUserId { get; set; }
+		public DateTimeOffset IsDeleted { get; set; }
 
 		// Navigation (optional to add later)
 		// public ICollection<RemitValidation> Validations { get; set; }
@@ -58,3 +54,4 @@ namespace SwiftPay.Domain.Remittance.Entities
 		//added something
 	}
 }
+

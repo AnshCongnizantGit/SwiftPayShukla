@@ -1,31 +1,89 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
+using SwiftPay.Constants.Enums;
 using SwiftPay.Domain.Remittance.Entities;
+using SwiftPay.Models;
 
 namespace SwiftPay.Config.Configuration
 {
-    public class RemittanceRequestConfiguration : IEntityTypeConfiguration<RemittanceRequest>
-    {
-        public void Configure(EntityTypeBuilder<RemittanceRequest> builder)
-        {
-            builder.HasKey(r => r.RemitId);
-            builder.Property(r => r.RemitId).HasMaxLength(64);
-            builder.Property(r => r.CustomerId).IsRequired().HasMaxLength(64);
-            builder.Property(r => r.BeneficiaryId).IsRequired().HasMaxLength(64);
-            builder.Property(r => r.FromCurrency).IsRequired().HasMaxLength(3);
-            builder.Property(r => r.ToCurrency).IsRequired().HasMaxLength(3);
-            builder.Property(r => r.SendAmount).IsRequired().HasPrecision(18, 2);
-            builder.Property(r => r.ReceiverAmount).HasPrecision(18, 2);
-            builder.Property(r => r.QuoteId).HasMaxLength(64);
-            builder.Property(r => r.RateLockId).HasMaxLength(64);
-            builder.Property(r => r.RateApplied).HasPrecision(18, 6);
-            builder.Property(r => r.FeeApplied).HasPrecision(18, 2);
-            builder.Property(r => r.PurposeCode).HasMaxLength(32);
-            builder.Property(r => r.SourceOfFunds).HasMaxLength(64);
-            builder.Property(r => r.CreatedDate).IsRequired().HasDefaultValueSql("GETUTCDATE()");
-            builder.Property(r => r.CreatedByUserId).HasMaxLength(64);
-            builder.Property(r => r.UpdatedByUserId).HasMaxLength(64);
-            builder.Property(r => r.RowVersion).IsRowVersion().HasDefaultValue(Array.Empty<byte>());
-        }
-    }
+	public class RemittanceModuleConfiguration :
+		IEntityTypeConfiguration<RemittanceRequest>,
+		IEntityTypeConfiguration<RemitValidation>,
+		IEntityTypeConfiguration<Document>
+	{
+		// --- 1. RemittanceRequest Configuration ---
+		public void Configure(EntityTypeBuilder<RemittanceRequest> builder)
+		{
+			builder.ToTable("RemittanceRequests");
+			builder.HasKey(r => r.RemitId);
+			builder.Property(r => r.RemitId).HasDefaultValueSql("NEWID()");
+
+			builder.Property(r => r.FromCurrency).IsRequired().HasMaxLength(3).IsFixedLength().IsUnicode(false);
+			builder.Property(r => r.ToCurrency).IsRequired().HasMaxLength(3).IsFixedLength().IsUnicode(false);
+
+			builder.Property(r => r.SendAmount).HasPrecision(18, 2);
+			builder.Property(r => r.ReceiverAmount).HasPrecision(18, 2);
+			builder.Property(r => r.FeeApplied).HasPrecision(18, 2);
+			builder.Property(r => r.RateApplied).HasPrecision(18, 8);
+
+			builder.Property(r => r.Status)
+				.HasConversion<string>()
+				.HasMaxLength(30)
+				.IsUnicode(false)
+				.HasDefaultValue(RemittanceRequestStatus.Draft);
+
+			builder.Property(r => r.CreatedDate).HasDefaultValueSql("GETUTCDATE()");
+			builder.Property(r => r.UpdateDate).HasDefaultValueSql("GETUTCDATE()");
+			builder.Property(r => r.IsDeleted).HasDefaultValueSql("GETUTCDATE()");
+
+			// Relationships
+			builder.HasMany<RemitValidation>()
+				.WithOne(v => v.RemittanceRequest)
+				.HasForeignKey(v => v.RemitId)
+				.OnDelete(DeleteBehavior.Cascade);
+
+			builder.HasMany<Document>()
+				.WithOne(d => d.RemittanceRequest)
+				.HasForeignKey(d => d.RemitId)
+				.OnDelete(DeleteBehavior.Cascade);
+		}
+
+		// --- 2. RemitValidation Configuration ---
+		public void Configure(EntityTypeBuilder<RemitValidation> builder)
+		{
+			builder.ToTable("RemitValidations");
+			builder.HasKey(v => v.ValidationId);
+			builder.Property(v => v.ValidationId).HasDefaultValueSql("NEWID()");
+
+			builder.Property(v => v.RuleName).IsRequired().HasMaxLength(100);
+			builder.Property(v => v.Message).HasMaxLength(500);
+
+			builder.Property(r => r.CreatedDate).HasDefaultValueSql("GETUTCDATE()");
+			builder.Property(r => r.UpdateDate).HasDefaultValueSql("GETUTCDATE()");
+			builder.Property(r => r.IsDeleted).HasDefaultValueSql("GETUTCDATE()");
+
+		}
+
+		// --- 3. Document Configuration ---
+		public void Configure(EntityTypeBuilder<Document> builder)
+		{
+			builder.ToTable("RemittanceDocuments");
+			builder.HasKey(d => d.DocumentId);
+			builder.Property(d => d.DocumentId).HasDefaultValueSql("NEWID()");
+
+			builder.Property(d => d.DocType).IsRequired().HasMaxLength(50);
+			builder.Property(d => d.FileURI).IsRequired().HasMaxLength(2048);
+
+			builder.Property(d => d.VerificationStatus)
+				.IsRequired()
+				.HasMaxLength(20)
+				.HasDefaultValue("Pending");
+
+			builder.Property(d => d.UploadedDate).HasDefaultValueSql("GETUTCDATE()");
+
+			builder.Property(r => r.CreatedDate).HasDefaultValueSql("GETUTCDATE()");
+			builder.Property(r => r.UpdateDate).HasDefaultValueSql("GETUTCDATE()");
+			builder.Property(r => r.IsDeleted).HasDefaultValueSql("GETUTCDATE()");
+		}
+	}
 }
