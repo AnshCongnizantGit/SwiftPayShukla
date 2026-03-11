@@ -35,5 +35,6 @@ namespace RemittanceModule
 		// Navigation (optional to add later)
 		// public ICollection<RemitValidation> Validations { get; set; }
 		// public ICollection<Document> Documents { get; set; }
+		//added something
 	}
 }
