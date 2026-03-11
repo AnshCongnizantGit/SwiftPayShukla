@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using RemittanceModule;
+
 using SwiftPay.Constants.Enums;
+using SwiftPay.Domain.Remittance.Entities;
 namespace SwiftPay.Models
 {
     public class RemitValidation
@@ -12,12 +13,15 @@ namespace SwiftPay.Models
 		public virtual RemittanceRequest RemittanceRequest { get; set; }
 
 		public ValidationRuleName RuleName { get; set; }   // Limit/Velocity/Docs/Corridor
-		public ValidationResult Result { get; set; }       // Pass/Fail
+		public Constants.Enums.ValidationResult Result { get; set; }       // Pass/Fail
 
 		public string Message { get; set; }          // required, non-empty
 		public DateTimeOffset CheckedDate { get; set; } // default GETUTCDATE()
 
-		//validations
+		public DateTimeOffset CreatedDate { get; set; }
+		public DateTimeOffset UpdateDate { get; set; }
+
+		public DateTimeOffset IsDeleted { get; set; }
 
 	}
 }
