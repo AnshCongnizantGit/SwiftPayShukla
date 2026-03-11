@@ -17,10 +17,10 @@ namespace SwiftPay.Models
 		public DateTimeOffset UploadedDate { get; set; } // default GETUTCDATE()
 		public VerificationStatus VerificationStatus { get; set; } // default Pending
 
-		public DateTimeOffset CreatedDate { get; set; }
-		public DateTimeOffset UpdateDate { get; set; }
+		public DateTime CreatedDate { get; set; }
+		public DateTime UpdateDate { get; set; }
 
-		public DateTimeOffset IsDeleted { get; set; }
+		public bool IsDeleted { get; set; }
 		
 
 	}

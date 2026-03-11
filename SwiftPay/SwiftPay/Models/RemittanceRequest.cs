@@ -43,10 +43,10 @@ namespace SwiftPay.Domain.Remittance.Entities
 		// Status & lifecycle
 		public RemittanceRequestStatus Status { get; set; }
 
-		public DateTimeOffset CreatedDate { get; set; }
-		public DateTimeOffset UpdateDate { get; set; }
+		public DateTime CreatedDate { get; set; }
+		public DateTime UpdateDate { get; set; }
 
-		public DateTimeOffset IsDeleted { get; set; }
+		public bool IsDeleted { get; set; }
 
 		// Navigation (optional to add later)
 		// public ICollection<RemitValidation> Validations { get; set; }

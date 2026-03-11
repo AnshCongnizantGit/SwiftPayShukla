@@ -18,10 +18,10 @@ namespace SwiftPay.Models
 		public string Message { get; set; }          // required, non-empty
 		public DateTimeOffset CheckedDate { get; set; } // default GETUTCDATE()
 
-		public DateTimeOffset CreatedDate { get; set; }
-		public DateTimeOffset UpdateDate { get; set; }
+		public DateTime CreatedDate { get; set; }
+		public DateTime UpdateDate { get; set; }
 
-		public DateTimeOffset IsDeleted { get; set; }
+		public bool IsDeleted { get; set; }
 
 	}
 }
