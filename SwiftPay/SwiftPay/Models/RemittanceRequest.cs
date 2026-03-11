@@ -1,39 +1,58 @@
-﻿// /Domain/Remittance/RemittanceRequest.cs
-using System;
-using SwiftPay.Constants.Enums;
-namespace RemittanceModule
+﻿using System;
+//using SwiftPay.Domain.Remittance.Enums;
+
+namespace SwiftPay.Domain.Remittance.Entities
 {
 	/// <summary>
 	/// Remittance request header.
 	/// </summary>
 	public class RemittanceRequest
 	{
-		public Guid RemitId { get; set; }           // PK
+		public string RemitId { get; set; }
 
-		public Guid CustomerId { get; set; }
-		public Guid BeneficiaryId { get; set; }
+		// Foreign references (by ID only for Phase-1)
+		public string CustomerId { get; set; }
 
-		public string FromCurrency { get; set; }     // 3-letter code, required
-		public string ToCurrency { get; set; }       // 3-letter code, required
+		public string BeneficiaryId { get; set; }
 
-		public decimal SendAmount { get; set; }      // >= 0
-		public decimal ReceiverAmount { get; set; }  // computed: (SendAmount * RateApplied) - FeeApplied
+		// Currencies (ISO 4217)
+		public string FromCurrency { get; set; }
 
-		public string QuoteId { get; set; }          // required (external quote ref)
+		public string ToCurrency { get; set; }
 
-		public decimal FeeApplied { get; set; }      // >= 0
-		public decimal RateApplied { get; set; }     // > 0 (e.g., 83.123456)
+		// Amounts
+		public decimal SendAmount { get; set; }
+
+		public decimal? ReceiverAmount { get; set; }
+
+		// FX & Fees linkage
+		public string? QuoteId { get; set; }
+
+		public string? RateLockId { get; set; }
+
+		public decimal? RateApplied { get; set; }
+
+		public decimal? FeeApplied { get; set; }
+
+		// Purpose & SoF
+		public string? PurposeCode { get; set; }
+
+		public string? SourceOfFunds { get; set; }
+
+		// Status & lifecycle
+		//public RemittanceStatus Status { get; set; } = RemittanceStatus.Draft;
+
+		public DateTimeOffset CreatedDate { get; set; }
 
 		public string PurposeCode { get; set; }      // required, non-empty
 		public string SourceOfFunds { get; set; }    // required, non-empty
 
-		public DateTimeOffset CreatedDate { get; set; } // default GETUTCDATE()
+		// Audit
+		public string? CreatedByUserId { get; set; }
 
-		public DateTimeOffset UpdateDate { get; set; }
-		public RemittanceRequestStatus Status { get; set; }    // default Draft/Validated/...
+		public string? UpdatedByUserId { get; set; }
 
-		// Navigation (optional to add later)
-		// public ICollection<RemitValidation> Validations { get; set; }
-		// public ICollection<Document> Documents { get; set; }
+		// Optimistic concurrency
+		public byte[] RowVersion { get; set; }
 	}
 }
