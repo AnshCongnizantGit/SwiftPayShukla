@@ -38,7 +38,7 @@ namespace SwiftPay.Config.Configuration
                 .HasConversion<string>()
                 .IsRequired()
                 .HasMaxLength(50)
-                .HasDefaultValue("Active");
+                .HasDefaultValue(UserStatus.Active);
 
             // IsDeleted with default value false
             builder.Property(u => u.IsDeleted)
@@ -153,12 +153,12 @@ namespace SwiftPay.Config.Configuration
                 .IsRequired()
                 .HasMaxLength(50);
 
-            // Map VerificationStatus enum to VARCHAR with default "Pending"
+            // Map VerificationStatus enum to VARCHAR with default Pending (enum value)
             builder.Property(k => k.VerificationStatus)
                 .HasConversion<string>()
                 .IsRequired()
                 .HasMaxLength(50)
-                .HasDefaultValue("Pending");
+                .HasDefaultValue(KycVerificationStatus.Pending);
 
             builder.Property(k => k.VerifiedDate)
                 .IsRequired(false);

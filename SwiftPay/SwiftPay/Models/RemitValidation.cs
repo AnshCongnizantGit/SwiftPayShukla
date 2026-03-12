@@ -9,7 +9,7 @@ namespace SwiftPay.Models
 
 		public Guid ValidationId { get; set; }       // PK
 
-		public Guid RemitId { get; set; }            // FK -> RemittanceRequest
+        public string RemitId { get; set; }            // FK -> RemittanceRequest (string GUID)
 		public virtual RemittanceRequest RemittanceRequest { get; set; }
 
 		public ValidationRuleName RuleName { get; set; }   // Limit/Velocity/Docs/Corridor

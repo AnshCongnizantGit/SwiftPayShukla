@@ -25,13 +25,13 @@ namespace SwiftPay.Config.Configuration
                      .HasConversion<string>()
                      .IsRequired()
                      .HasMaxLength(50)
-                     .HasDefaultValue("Low");
+                     .HasDefaultValue(CustomerRiskRating.Low);
 
                  builder.Property(c => c.Status)
                      .HasConversion<string>()
                      .IsRequired()
                      .HasMaxLength(50)
-                     .HasDefaultValue("Active");
+                     .HasDefaultValue(CustomerStatus.Active);
 
                  // CreatedAt with default current timestamp
                  builder.Property(c => c.CreatedAt)
@@ -97,7 +97,7 @@ namespace SwiftPay.Config.Configuration
                      .HasConversion<string>()
                      .IsRequired()
                      .HasMaxLength(50)
-                     .HasDefaultValue("Pending");
+                     .HasDefaultValue(BeneficiaryVerificationStatus.Pending);
 
                  builder.Property(b => b.AddedDate)
                      .HasDefaultValueSql("CURRENT_TIMESTAMP");
@@ -106,7 +106,7 @@ namespace SwiftPay.Config.Configuration
                      .HasConversion<string>()
                      .IsRequired()
                      .HasMaxLength(50)
-                     .HasDefaultValue("Active");
+                     .HasDefaultValue(BeneficiaryStatus.Active);
 
                  // CreatedAt with default current timestamp
                  builder.Property(b => b.CreatedAt)

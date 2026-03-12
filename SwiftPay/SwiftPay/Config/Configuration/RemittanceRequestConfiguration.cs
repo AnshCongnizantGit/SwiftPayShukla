@@ -15,8 +15,13 @@ namespace SwiftPay.Config.Configuration
 		public void Configure(EntityTypeBuilder<RemittanceRequest> builder)
 		{
 			builder.ToTable("RemittanceRequests");
-			builder.HasKey(r => r.RemitId);
-			builder.Property(r => r.RemitId).ValueGeneratedOnAdd();
+            builder.HasKey(r => r.RemitId);
+            // RemitId is stored as string GUID (varchar) across related tables
+            builder.Property(r => r.RemitId)
+                .IsRequired()
+                .HasMaxLength(64)
+                .HasDefaultValueSql("NEWID()")
+                .ValueGeneratedOnAdd();
 
 			builder.Property(r => r.FromCurrency).IsRequired().HasMaxLength(3).IsFixedLength().IsUnicode(false);
 			builder.Property(r => r.ToCurrency).IsRequired().HasMaxLength(3).IsFixedLength().IsUnicode(false);
@@ -53,7 +58,11 @@ namespace SwiftPay.Config.Configuration
 		{
 			builder.ToTable("RemitValidations");
 			builder.HasKey(v => v.ValidationId);
-			builder.Property(v => v.ValidationId).ValueGeneratedOnAdd();
+				builder.Property(v => v.ValidationId).HasDefaultValueSql("NEWID()").ValueGeneratedOnAdd();
+
+				builder.Property(v => v.RemitId)
+					.IsRequired()
+					.HasMaxLength(64);
 
 			builder.Property(v => v.RuleName).IsRequired().HasMaxLength(100);
 			builder.Property(v => v.Message).HasMaxLength(500);
@@ -71,13 +80,18 @@ namespace SwiftPay.Config.Configuration
 			builder.HasKey(d => d.DocumentId);
 			builder.Property(d => d.DocumentId).ValueGeneratedOnAdd();
 
-			builder.Property(d => d.DocType).IsRequired().HasMaxLength(50);
+				builder.Property(d => d.DocType).IsRequired().HasMaxLength(50);
+
+				builder.Property(d => d.RemitId)
+					.IsRequired()
+					.HasMaxLength(64);
 			builder.Property(d => d.FileURI).IsRequired().HasMaxLength(2048);
 
-			builder.Property(d => d.VerificationStatus)
-				.IsRequired()
-				.HasMaxLength(20)
-				.HasDefaultValue("Pending");
+            builder.Property(d => d.VerificationStatus)
+                .HasConversion<string>()
+                .IsRequired()
+                .HasMaxLength(20)
+                .HasDefaultValue(VerificationStatus.Pending);
 
 			builder.Property(d => d.UploadedDate).HasDefaultValueSql("GETUTCDATE()");
 

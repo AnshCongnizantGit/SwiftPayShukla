@@ -32,7 +32,7 @@ namespace SwiftPay.Config.Configuration
                 .HasConversion<string>()
                 .IsRequired()
                 .HasMaxLength(50)
-                .HasDefaultValue("Unread");
+                .HasDefaultValue(NotificationStatus.Unread);
 
             builder.Property(n => n.CreatedDate)
                 .HasDefaultValueSql("CURRENT_TIMESTAMP");

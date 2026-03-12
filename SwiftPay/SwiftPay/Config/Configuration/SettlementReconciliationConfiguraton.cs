@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using SwiftPay.Models;
+using SwiftPay.Constants.Enums;
 
 namespace SwiftPay.Config.Configuration
 {
@@ -10,11 +11,18 @@ namespace SwiftPay.Config.Configuration
         public void Configure(EntityTypeBuilder<ReconciliationRecord> builder)
         {
             builder.HasKey(r => r.ReconID);
-            builder.Property(r => r.ReferenceType).IsRequired().HasMaxLength(50);
-            builder.Property(r => r.ReferenceID).IsRequired().HasMaxLength(100);
+            // store enum values as strings in DB
+            builder.Property(r => r.ReferenceType)
+                   .HasConversion<string>()
+                   .IsRequired()
+                   .HasMaxLength(50);
+            builder.Property(r => r.ReferenceID).IsRequired().HasMaxLength(100).ValueGeneratedOnAdd();
             builder.Property(r => r.ExpectedAmount).IsRequired().HasPrecision(18, 4);
             builder.Property(r => r.ActualAmount).IsRequired().HasPrecision(18, 4);
-            builder.Property(r => r.Result).IsRequired().HasMaxLength(50);
+            builder.Property(r => r.Result)
+                   .HasConversion<string>()
+                   .IsRequired()
+                   .HasMaxLength(50);
             builder.Property(r => r.ReconDate).IsRequired().HasDefaultValueSql("GETDATE()");
         }
     }
@@ -49,7 +57,7 @@ namespace SwiftPay.Config.Configuration
             builder.Property(s => s.Status)
                    .HasConversion<string>() // store enum as string
                    .HasMaxLength(50)
-                   .HasDefaultValue("Open");
+                   .HasDefaultValue(Status.Open);
         }
     }
 }

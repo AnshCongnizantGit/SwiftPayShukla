@@ -9,12 +9,12 @@ namespace SwiftPay.Domain.Remittance.Entities
 	/// </summary>
 	public class RemittanceRequest
 	{
-		public string RemitId { get; set; }
+        public string RemitId { get; set; }
 
 		// Foreign references (by ID only for Phase-1)
-		public string CustomerId { get; set; }
+		public int CustomerId { get; set; }
 
-		public string BeneficiaryId { get; set; }
+		public int BeneficiaryId { get; set; }
 
 		// Currencies (ISO 4217)
 		public string FromCurrency { get; set; }
