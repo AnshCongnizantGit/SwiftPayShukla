@@ -1,4 +1,5 @@
 using System;
+using SwiftPay.Constants.Enums; // Added reference to your Enums namespace
 
 namespace SwiftPay.FXModule.Api.Models
 {
@@ -9,7 +10,7 @@ namespace SwiftPay.FXModule.Api.Models
         public string CustomerID { get; set; } 
         public DateTime LockStart { get; set; } 
         public DateTime LockExpiry { get; set; } 
-        public string Status { get; set; } 
+        public RateLockStatus Status { get; set; } // Updated from string
 
         // Audit & Soft Delete Fields
         public DateTime CreatedDate { get; set; }
