@@ -15,6 +15,7 @@ namespace SwiftPay.Config.Configuration
         {
             builder.HasKey(f => f.QuoteID);
             builder.Property(f => f.QuoteID).HasDefaultValueSql("NEWID()");
+            builder.Property(f => f.QuoteID).ValueGeneratedOnAdd();
             
             builder.Property(f => f.FromCurrency).IsRequired().HasMaxLength(3);
             builder.Property(f => f.ToCurrency).IsRequired().HasMaxLength(3);
@@ -36,6 +37,7 @@ namespace SwiftPay.Config.Configuration
         {
             builder.HasKey(f => f.FeeRuleID);
             builder.Property(f => f.FeeRuleID).HasDefaultValueSql("NEWID()");
+            builder.Property(f => f.FeeRuleID).ValueGeneratedOnAdd();
             
             builder.Property(f => f.Corridor).IsRequired().HasMaxLength(7);
             
@@ -60,6 +62,7 @@ namespace SwiftPay.Config.Configuration
         {
             builder.HasKey(r => r.LockID);
             builder.Property(r => r.LockID).HasDefaultValueSql("NEWID()");
+            builder.Property(r => r.LockID).ValueGeneratedOnAdd();
             
             builder.Property(r => r.QuoteID).IsRequired().HasMaxLength(64);
             builder.Property(r => r.CustomerID).IsRequired().HasMaxLength(64);

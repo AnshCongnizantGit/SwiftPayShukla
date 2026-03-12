@@ -14,6 +14,7 @@ namespace SwiftPay.Config.Configuration
         {
             builder.ToTable("Amendments");
             builder.HasKey(a => a.AmendmentID);
+            builder.Property(a => a.AmendmentID).ValueGeneratedOnAdd();
             
             builder.Property(a => a.FieldChanged).IsRequired().HasMaxLength(100);
             builder.Property(a => a.OldValue).HasColumnType("text");
@@ -33,6 +34,7 @@ namespace SwiftPay.Config.Configuration
         {
             builder.ToTable("Cancellations");
             builder.HasKey(c => c.CancellationID);
+            builder.Property(c => c.CancellationID).ValueGeneratedOnAdd();
             builder.Property(c => c.Reason).IsRequired().HasColumnType("text");
             
             builder.Property(c => c.Status)
@@ -49,6 +51,7 @@ namespace SwiftPay.Config.Configuration
         {
             builder.ToTable("RefundRefs");
             builder.HasKey(r => r.RefundID);
+            builder.Property(r => r.RefundID).ValueGeneratedOnAdd();
             builder.Property(r => r.Amount).HasPrecision(15, 4);
             
             builder.Property(r => r.Method)

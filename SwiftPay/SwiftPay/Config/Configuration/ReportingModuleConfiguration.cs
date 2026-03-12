@@ -10,6 +10,7 @@ namespace SwiftPay.Config.Configuration
         {
             builder.ToTable("RemitReports");
             builder.HasKey(r => r.ReportID);
+            builder.Property(r => r.ReportID).ValueGeneratedOnAdd();
             
             builder.Property(r => r.Scope).IsRequired().HasMaxLength(50);
             builder.Property(r => r.Metrics).HasColumnType("text");

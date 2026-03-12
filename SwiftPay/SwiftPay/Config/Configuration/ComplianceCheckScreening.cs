@@ -18,6 +18,7 @@ namespace SwiftPay.Config.Configuration
             builder.ToTable("ComplianceChecks");
             builder.HasKey(c => c.CheckId);
             builder.Property(c => c.CheckId).HasMaxLength(64).HasDefaultValueSql("NEWID()");
+            builder.Property(c => c.CheckId).ValueGeneratedOnAdd();
 
             builder.Property(c => c.RemitId).IsRequired().HasMaxLength(64);
 
@@ -57,6 +58,7 @@ namespace SwiftPay.Config.Configuration
             builder.ToTable("ComplianceDecisions");
             builder.HasKey(d => d.DecisionId);
             builder.Property(d => d.DecisionId).HasMaxLength(64).HasDefaultValueSql("NEWID()");
+            builder.Property(d => d.DecisionId).ValueGeneratedOnAdd();
 
             builder.Property(d => d.RemitId).IsRequired().HasMaxLength(64);
             builder.Property(d => d.AnalystId).IsRequired().HasMaxLength(64);
@@ -87,6 +89,7 @@ namespace SwiftPay.Config.Configuration
             // Primary Key - matching your RuleID casing
             builder.HasKey(r => r.RuleId);
             builder.Property(r => r.RuleId).HasMaxLength(64).HasDefaultValueSql("NEWID()");
+            builder.Property(r => r.RuleId).ValueGeneratedOnAdd();
 
             builder.Property(r => r.Corridor).IsRequired().HasMaxLength(16).IsUnicode(false);
 
@@ -122,6 +125,7 @@ namespace SwiftPay.Config.Configuration
             // Primary Key
             builder.HasKey(p => p.InstructionId);
             builder.Property(p => p.InstructionId).HasMaxLength(64).HasDefaultValueSql("NEWID()");
+            builder.Property(p => p.InstructionId).ValueGeneratedOnAdd();
 
             // Foreign Key & Partner Info
             builder.Property(p => p.RemitId).IsRequired().HasMaxLength(64);

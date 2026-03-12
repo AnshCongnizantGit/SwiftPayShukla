@@ -9,6 +9,7 @@ namespace SwiftPay.Config.Configuration
         public void Configure(EntityTypeBuilder<AuditLog> builder)
         {
             builder.HasKey(a => a.AuditID);
+            builder.Property(a => a.AuditID).ValueGeneratedOnAdd();
 
             builder.Property(a => a.UserID)
                 .IsRequired();

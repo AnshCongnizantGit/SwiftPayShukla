@@ -11,6 +11,7 @@ namespace SwiftPay.Config.Configuration
         public void Configure(EntityTypeBuilder<NotificationAlert> builder)
         {
             builder.HasKey(n => n.NotificationID);
+            builder.Property(n => n.NotificationID).ValueGeneratedOnAdd();
 
             builder.Property(n => n.UserID).IsRequired();
 

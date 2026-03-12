@@ -34,7 +34,7 @@ namespace SwiftPay.Config.Configuration
 
 			builder.Property(r => r.CreatedDate).HasDefaultValueSql("GETUTCDATE()");
 			builder.Property(r => r.UpdateDate).HasDefaultValueSql("GETUTCDATE()");
-			builder.Property(r => r.IsDeleted).HasDefaultValueSql("GETUTCDATE()");
+			builder.Property(r => r.IsDeleted).HasDefaultValue(false);
 
 			// Relationships
 			builder.HasMany<RemitValidation>()
@@ -60,7 +60,7 @@ namespace SwiftPay.Config.Configuration
 
 			builder.Property(r => r.CreatedDate).HasDefaultValueSql("GETUTCDATE()");
 			builder.Property(r => r.UpdateDate).HasDefaultValueSql("GETUTCDATE()");
-			builder.Property(r => r.IsDeleted).HasDefaultValueSql("GETUTCDATE()");
+			builder.Property(r => r.IsDeleted).HasDefaultValue(false);
 
 		}
 
@@ -83,7 +83,7 @@ namespace SwiftPay.Config.Configuration
 
 			builder.Property(r => r.CreatedDate).HasDefaultValueSql("GETUTCDATE()");
 			builder.Property(r => r.UpdateDate).HasDefaultValueSql("GETUTCDATE()");
-			builder.Property(r => r.IsDeleted).HasDefaultValueSql("GETUTCDATE()");
+			builder.Property(r => r.IsDeleted).HasDefaultValue(false);
 		}
 	}
 }

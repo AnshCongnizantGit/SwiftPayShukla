@@ -12,6 +12,7 @@ namespace SwiftPay.Config.Configuration
         public void Configure(EntityTypeBuilder<User> builder)
         {
             builder.HasKey(u => u.UserId);
+            builder.Property(u => u.UserId).ValueGeneratedOnAdd();
 
             builder.Property(u => u.Name)
                 .IsRequired()
@@ -68,6 +69,7 @@ namespace SwiftPay.Config.Configuration
         public void Configure(EntityTypeBuilder<Role> builder)
         {
             builder.HasKey(r => r.RoleId);
+            builder.Property(r => r.RoleId).ValueGeneratedOnAdd();
 
             builder.Property(r => r.RoleType)
                 .HasConversion<string>()
@@ -100,6 +102,7 @@ namespace SwiftPay.Config.Configuration
         public void Configure(EntityTypeBuilder<UserRole> builder)
         {
             builder.HasKey(ur => ur.UserRoleId);
+            builder.Property(ur => ur.UserRoleId).ValueGeneratedOnAdd();
 
             builder.Property(ur => ur.UserId).IsRequired();
             builder.Property(ur => ur.RoleId).IsRequired();
@@ -139,6 +142,7 @@ namespace SwiftPay.Config.Configuration
         public void Configure(EntityTypeBuilder<KYCRecord> builder)
         {
             builder.HasKey(k => k.KYCID);
+            builder.Property(k => k.KYCID).ValueGeneratedOnAdd();
 
             builder.Property(k => k.UserID)
                 .IsRequired();

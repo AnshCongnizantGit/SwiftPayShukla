@@ -11,6 +11,7 @@ namespace SwiftPay.Config.Configuration
         public void Configure(EntityTypeBuilder<CustomerProfile> builder)
         {
             builder.HasKey(c => c.CustomerID);
+            builder.Property(c => c.CustomerID).ValueGeneratedOnAdd();
 
             builder.Property(c => c.UserID).IsRequired();
             builder.HasIndex(c => c.UserID).IsUnique();
@@ -59,6 +60,7 @@ namespace SwiftPay.Config.Configuration
              public void Configure(EntityTypeBuilder<Domain.Remittance.Entities.Beneficiary> builder)
              {
                  builder.HasKey(b => b.BeneficiaryID);
+                 builder.Property(b => b.BeneficiaryID).ValueGeneratedOnAdd();
 
                  builder.Property(b => b.CustomerID).IsRequired();
 
