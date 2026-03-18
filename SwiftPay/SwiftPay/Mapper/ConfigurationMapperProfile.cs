@@ -49,7 +49,13 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
-                .ForMember(dest => dest.UserRoles, opt => opt.Ignore());
+                .ForMember(dest => dest.UserRoles, opt => opt.Ignore())
+                // Only map Name if it's not null or empty
+                .ForMember(dest => dest.Name, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.Name)))
+                // Only map Email if it's not null or empty
+                .ForMember(dest => dest.Email, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.Email)))
+                // Only map Phone if it's not null or empty
+                .ForMember(dest => dest.Phone, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.Phone)));
 
             // Map User -> UserResponseDto
             CreateMap<User, UserResponseDto>()
@@ -94,7 +100,13 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
-                .ForMember(dest => dest.User, opt => opt.Ignore());
+                .ForMember(dest => dest.User, opt => opt.Ignore())
+                // Only map DOB if it's not null
+                .ForMember(dest => dest.DOB, opt => opt.Condition((src, dest) => src.DOB.HasValue))
+                // Only map AddressJSON if it's not null or empty
+                .ForMember(dest => dest.AddressJSON, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.AddressJSON)))
+                // Only map Nationality if it's not null or empty
+                .ForMember(dest => dest.Nationality, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.Nationality)));
 
             // Map CustomerProfile -> CustomerResponseDto
             CreateMap<CustomerProfile, CustomerResponseDto>()
@@ -134,7 +146,21 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
-                .ForMember(dest => dest.Customer, opt => opt.Ignore());
+                .ForMember(dest => dest.Customer, opt => opt.Ignore())
+                // Only map Name if it's not null or empty
+                .ForMember(dest => dest.Name, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.Name)))
+                // Only map Country if it's not null or empty
+                .ForMember(dest => dest.Country, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.Country)))
+                // Only map PayoutMode if it has a value
+                .ForMember(dest => dest.PayoutMode, opt => opt.Condition((src, dest) => src.PayoutMode.HasValue))
+                // Only map BankName if it's not null or empty
+                .ForMember(dest => dest.BankName, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.BankName)))
+                // Only map BankCountry if it's not null or empty
+                .ForMember(dest => dest.BankCountry, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.BankCountry)))
+                // Only map AccountOrWalletNo if it's not null or empty
+                .ForMember(dest => dest.AccountOrWalletNo, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.AccountOrWalletNo)))
+                // Only map IFSC_IBAN_SWIFT if it's not null or empty
+                .ForMember(dest => dest.IFSC_IBAN_SWIFT, opt => opt.Condition((src, dest) => !string.IsNullOrEmpty(src.IFSC_IBAN_SWIFT)));
 
             // Map Beneficiary -> BeneficiaryResponseDto
             CreateMap<Beneficiary, BeneficiaryResponseDto>()

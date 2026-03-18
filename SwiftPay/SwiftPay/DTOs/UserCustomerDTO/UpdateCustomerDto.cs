@@ -14,5 +14,8 @@ namespace SwiftPay.DTOs.UserCustomerDTO
 
         [StringLength(100)]
         public string? Nationality { get; set; }
+
+        // UserID is not updatable - it's the foreign key linking to the associated user
+        // If you need to change the user, create a new customer profile instead
     }
 }

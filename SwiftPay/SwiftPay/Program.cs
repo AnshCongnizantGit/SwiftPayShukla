@@ -1,87 +1,50 @@
+using System.Reflection;
+using System.Text.Json.Serialization;
 using Microsoft.EntityFrameworkCore;
 using SwiftPay.Configuration;
-using AutoMapper;
 using SwiftPay.Profiles;
-using SwiftPay.Mapper;
-using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddDbContext<AppDbContext>(
-    options => options.UseSqlServer(
-        builder.Configuration.GetConnectionString("SwiftPayDb")));
+// 1. Database
+builder.Services.AddDbContext<AppDbContext>(opt =>
+	opt.UseSqlServer(builder.Configuration.GetConnectionString("SwiftPayDb")));
 
-// Register Remittance Repository and Service
-builder.Services.AddScoped<SwiftPay.Repositories.Interfaces.IRemittanceRepository, SwiftPay.Repositories.RemittanceRepository>();
-builder.Services.AddScoped<SwiftPay.Services.Interfaces.IRemittanceService, SwiftPay.Services.RemittanceService>();
+// 2. Automatic Registration (The "Short" Way)
+// This finds all classes ending in "Repository" or "Service" and registers them against their IInterface
+var assemblies = new[] { Assembly.GetExecutingAssembly() };
+foreach (var assembly in assemblies)
+{
+	var types = assembly.GetTypes()
+		.Where(t => t.IsClass && !t.IsAbstract && (t.Name.EndsWith("Repository") || t.Name.EndsWith("Service")));
 
-// Register User Repository and Service
-builder.Services.AddScoped<SwiftPay.Repositories.Interfaces.IUserRepository, SwiftPay.Repositories.UserRepository>();
-builder.Services.AddScoped<SwiftPay.Services.Interfaces.IUserService, SwiftPay.Services.UserService>();
+	foreach (var type in types)
+	{
+		var interfaceType = type.GetInterface($"I{type.Name}");
+		if (interfaceType != null)
+			builder.Services.AddScoped(interfaceType, type);
+	}
+}
 
-// Register Customer Repository and Service
-builder.Services.AddScoped<SwiftPay.Repositories.Interfaces.ICustomerRepository, SwiftPay.Repositories.CustomerRepository>();
-builder.Services.AddScoped<SwiftPay.Services.Interfaces.ICustomerService, SwiftPay.Services.CustomerService>();
+// 3. Automatic AutoMapper
+// This finds ALL profiles in your project automatically
+builder.Services.AddAutoMapper(typeof(RemittanceProfile).Assembly);
 
-// Register Beneficiary Repository and Service
-builder.Services.AddScoped<SwiftPay.Repositories.Interfaces.IBeneficiaryRepository, SwiftPay.Repositories.BeneficiaryRepository>();
-builder.Services.AddScoped<SwiftPay.Services.Interfaces.IBeneficiaryService, SwiftPay.Services.BeneficiaryService>();
-
-// Register AuditLog Repository and Service
-builder.Services.AddScoped<SwiftPay.Repositories.Interfaces.IAuditLogRepository, SwiftPay.Repositories.AuditLogRepository>();
-builder.Services.AddScoped<SwiftPay.Services.Interfaces.IAuditLogService, SwiftPay.Services.AuditLogService>();
-
-// Register KYCRecord Repository and Service
-builder.Services.AddScoped<SwiftPay.Repositories.Interfaces.IKYCRecordRepository, SwiftPay.Repositories.KYCRecordRepository>();
-builder.Services.AddScoped<SwiftPay.Services.Interfaces.IKYCRecordService, SwiftPay.Services.KYCRecordService>();
-
-// Register NotificationAlert Repository and Service
-builder.Services.AddScoped<SwiftPay.Repositories.Interfaces.INotificationAlertRepository, SwiftPay.Repositories.NotificationAlertRepository>();
-builder.Services.AddScoped<SwiftPay.Services.Interfaces.INotificationAlertService, SwiftPay.Services.NotificationAlertService>();
-
-builder.Services.AddScoped<SwiftPay.Services.Interfaces.IAmendmentService, SwiftPay.Services.AmendmentService>();       
-builder.Services.AddScoped<SwiftPay.Repositories.Interfaces.IAmendmentRepository, SwiftPay.Repositories.AmendmentRepository>();     
-
-// AutoMapper registration - consolidated mapper profiles for all entities
-builder.Services.AddAutoMapper(typeof(RemittanceProfile),
-    typeof(ConfigurationMapperProfile),
-    typeof(SwiftPay.Profiles.KYCRecordMapperProfile),
-    typeof(SwiftPay.Profiles.NotificationAlertMapperProfile),
-    typeof(SwiftPay.Profiles.AuditLogMapperProfile));
-// Register ComplianceCheck repository and service so controllers can resolve them
-builder.Services.AddScoped<SwiftPay.Repositories.Interfaces.IComplianceCheckRepository, SwiftPay.Repositories.ComplianceCheckRepository>();
-builder.Services.AddScoped<SwiftPay.Services.Interfaces.IComplianceCheckService, SwiftPay.Services.ComplianceCheckService>();
-
-// AutoMapper registration - ensure AutoMapper and its extensions package versions are compatible.
-// Register mapper profiles so IMapper is available for services.
-builder.Services.AddAutoMapper(typeof(ConfigurationMapperProfile));
-
-
-// Add services to the container.
-
+// 4. Controllers & JSON
 builder.Services.AddControllers()
-    .AddJsonOptions(options =>
-    {
-        // Allow enums to be serialized/deserialized as strings
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        // Use camelCase for JSON properties
-        options.JsonSerializerOptions.PropertyNamingPolicy = null; // Keep original casing
-    });
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
+	.AddJsonOptions(options =>
+	{
+		options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+		options.JsonSerializerOptions.PropertyNamingPolicy = null;
+	});
+
 builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
-{
-    app.MapOpenApi();
-}
+if (app.Environment.IsDevelopment()) app.MapOpenApi();
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
-
 app.Run();

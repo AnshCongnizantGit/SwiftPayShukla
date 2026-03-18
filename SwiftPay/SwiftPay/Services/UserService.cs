@@ -31,11 +31,8 @@ namespace SwiftPay.Services
             // Use AutoMapper to map DTO to entity
             var entity = _mapper.Map<User>(dto);
 
-            // Set server-controlled audit/default fields
-            entity.CreatedAt = DateTime.UtcNow;
-            entity.UpdatedAt = DateTime.UtcNow;
-            entity.IsDeleted = false;
-            entity.Status = UserStatus.Active;
+            // Audit fields and Status are controlled by database configuration
+            // DB defaults: CreatedAt, UpdatedAt (CURRENT_TIMESTAMP), IsDeleted (false), Status (Active)
 
             var created = await _repo.CreateAsync(entity);
             return created;
@@ -78,7 +75,7 @@ namespace SwiftPay.Services
                     throw new Exception($"Phone number '{dto.Phone}' is already in use by another user. Please use a different phone number.");
             }
 
-            // Use AutoMapper to map only non-null fields
+            // Use AutoMapper to map only non-null fields (mapper handles conditional logic)
             _mapper.Map(dto, user);
 
             // Update the UpdatedAt timestamp
