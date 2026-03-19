@@ -11,7 +11,7 @@ namespace SwiftPay.DTOs.ComplianceDTO
         [Required] public string RemitId { get; set; }
         [Required] public string AnalystId { get; set; }
         [Required] public string Decision { get; set; } // Approve, Hold, Reject
-        public string? Notes { get; set; }
+        public string Notes { get; set; }
     }
 
     public class UpdateComplianceDecisionDto

@@ -1,5 +1,5 @@
-﻿using SwiftPay.Constants.Enums;
-using System;
+﻿using System;
+using SwiftPay.Constants.Enums;
 
 namespace SwiftPay.Domain.Remittance.Entities
 {
@@ -14,7 +14,7 @@ namespace SwiftPay.Domain.Remittance.Entities
         public DateTimeOffset CreatedDate { get; set; }
         public DateTimeOffset UpdateDate { get; set; }
         public bool IsDeleted { get; set; }
-
+        
         public byte[] RowVersion { get; set; }
     }
 }

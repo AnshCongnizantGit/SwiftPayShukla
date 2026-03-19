@@ -20,71 +20,73 @@ namespace SwiftPay.Services
 			_mapper = mapper;
 		}
 
-		public async Task<NotificationAlert> CreateAsync(CreateNotificationDto dto)
+	public async Task<NotificationResponseDto> CreateAsync(CreateNotificationDto dto)
+	{
+		// Validate that User exists - BUSINESS LOGIC
+		var user = await _userRepo.GetByIdAsync(dto.UserID);
+		if (user == null)
+			throw new KeyNotFoundException($"User with ID {dto.UserID} does not exist.");
+
+		// Use AutoMapper to map DTO to entity
+		var entity = _mapper.Map<NotificationAlert>(dto);
+
+		var created = await _repo.CreateAsync(entity);
+		return _mapper.Map<NotificationResponseDto>(created);
+	}
+
+	public async Task<NotificationResponseDto> GetByIdAsync(int notificationId)
+	{
+		var notification = await _repo.GetByIdAsync(notificationId);
+		return _mapper.Map<NotificationResponseDto>(notification);
+	}
+
+	public async Task<IEnumerable<NotificationResponseDto>> GetByUserIdAsync(int userId)
+	{
+		var notifications = await _repo.GetByUserIdAsync(userId);
+		return _mapper.Map<List<NotificationResponseDto>>(notifications);
+	}
+
+	public async Task<IEnumerable<NotificationResponseDto>> GetUnreadByUserIdAsync(int userId)
+	{
+		var notifications = await _repo.GetUnreadByUserIdAsync(userId);
+		return _mapper.Map<List<NotificationResponseDto>>(notifications);
+	}
+
+	public async Task<IEnumerable<NotificationResponseDto>> GetAllAsync()
+	{
+		var notifications = await _repo.GetAllAsync();
+		return _mapper.Map<List<NotificationResponseDto>>(notifications);
+	}
+
+	public async Task<NotificationResponseDto> MarkAsReadAsync(int notificationId)
+	{
+		// Retrieve notification - business logic validation
+		var notification = await _repo.GetByIdAsync(notificationId);
+		if (notification == null)
+			throw new KeyNotFoundException($"Notification with ID {notificationId} not found");
+
+		// Set status - ReadAt and UpdatedAt are handled by AuditLogInterceptor automatically
+		notification.Status = NotificationStatus.Read;
+
+		var updated = await _repo.UpdateAsync(notification);
+		return _mapper.Map<NotificationResponseDto>(updated);
+	}
+
+	public async Task<IEnumerable<NotificationResponseDto>> MarkAllAsReadAsync(int userId)
+	{
+		// Retrieve all unread notifications for user - BUSINESS LOGIC
+		var notifications = (await _repo.GetUnreadByUserIdAsync(userId)).ToList();
+
+		// Update each notification status
+		foreach (var notification in notifications)
 		{
-			// Validate that User exists
-			var user = await _userRepo.GetByIdAsync(dto.UserID);
-			if (user == null)
-				throw new Exception($"User with ID {dto.UserID} does not exist. Cannot create notification without a valid user.");
-
-			// Use AutoMapper to map DTO to entity
-			var entity = _mapper.Map<NotificationAlert>(dto);
-
-			// Audit fields and defaults are configured in database configuration
-			// Status is set by DB default (NotificationStatus.Unread)
-
-			var created = await _repo.CreateAsync(entity);
-			return created;
-		}
-
-		public async Task<NotificationAlert> GetByIdAsync(int notificationId)
-		{
-			return await _repo.GetByIdAsync(notificationId);
-		}
-
-		public async Task<IEnumerable<NotificationAlert>> GetByUserIdAsync(int userId)
-		{
-			return await _repo.GetByUserIdAsync(userId);
-		}
-
-		public async Task<IEnumerable<NotificationAlert>> GetUnreadByUserIdAsync(int userId)
-		{
-			return await _repo.GetUnreadByUserIdAsync(userId);
-		}
-
-		public async Task<IEnumerable<NotificationAlert>> GetAllAsync()
-		{
-			return await _repo.GetAllAsync();
-		}
-
-		public async Task<NotificationAlert> MarkAsReadAsync(int notificationId)
-		{
-			var notification = await _repo.GetByIdAsync(notificationId);
-			if (notification == null)
-				throw new Exception($"Notification with ID {notificationId} not found");
-
 			notification.Status = NotificationStatus.Read;
-			notification.ReadAt = DateTime.UtcNow;
-			notification.UpdatedAt = DateTime.UtcNow;
-
-			var updated = await _repo.UpdateAsync(notification);
-			return updated;
+			// ReadAt and UpdatedAt are handled by AuditLogInterceptor automatically
+			await _repo.UpdateAsync(notification);
 		}
 
-		public async Task<IEnumerable<NotificationAlert>> MarkAllAsReadAsync(int userId)
-		{
-			var notifications = (await _repo.GetUnreadByUserIdAsync(userId)).ToList();
-
-			foreach (var notification in notifications)
-			{
-				notification.Status = NotificationStatus.Read;
-				notification.ReadAt = DateTime.UtcNow;
-				notification.UpdatedAt = DateTime.UtcNow;
-				await _repo.UpdateAsync(notification);
-			}
-
-			return notifications;
-		}
+		return _mapper.Map<List<NotificationResponseDto>>(notifications);
+	}
 
 		public async Task<bool> DeleteAsync(int notificationId)
 		{

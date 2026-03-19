@@ -1,5 +1,5 @@
-﻿using SwiftPay.Constants.Enums;
-using System;
+﻿using System;
+using SwiftPay.Constants.Enums;
 
 namespace SwiftPay.Domain.Remittance.Entities
 {
@@ -10,11 +10,13 @@ namespace SwiftPay.Domain.Remittance.Entities
         public string PartnerCode { get; set; }
         public string PayloadJson { get; set; }
         public string AckRef { get; set; }
-        public PayOutInstructionStatus PartnerStatus { get; set; } // Sent, Ack, Rejected, Settled
-        public DateTimeOffset SentDate { get; set; }
-        public DateTimeOffset CreatedDate { get; set; }
+         public PayOutInstructionStatus PartnerStatus { get; set; }// Sent, Ack, Rejected, Settled
+         public DateTimeOffset SentDate { get; set; }
+         public DateTimeOffset CreatedDate { get; set; }
         public DateTimeOffset UpdateDate { get; set; }
         public bool IsDeleted { get; set; }
+
+         
         public byte[] RowVersion { get; set; }
     }
 }

@@ -23,52 +23,62 @@ namespace SwiftPay.Services
             _mapper = mapper;
         }
 
-        public async Task<Beneficiary> CreateAsync(CreateBeneficiaryDto dto)
+        public async Task<BeneficiaryResponseDto> CreateAsync(CreateBeneficiaryDto dto)
         {
-            // Validate that Customer exists
+            // Validate that Customer exists - BUSINESS LOGIC
             var customer = await _customerRepo.GetByIdAsync(dto.CustomerID);
             if (customer == null)
-                throw new Exception($"Customer with ID {dto.CustomerID} does not exist. Cannot create beneficiary without a valid customer.");
+                throw new KeyNotFoundException($"Customer with ID {dto.CustomerID} does not exist.");
 
             // Use AutoMapper to map DTO to entity
             var entity = _mapper.Map<Beneficiary>(dto);
 
-            // Audit fields (CreatedAt, UpdatedAt, IsDeleted) are configured in database configuration
-            // AddedDate, Status, VerificationStatus are set by mapper profile (Ignore) - configured at DB level
-
             var created = await _repo.CreateAsync(entity);
-            return created;
+            return _mapper.Map<BeneficiaryResponseDto>(created);
         }
 
-        public async Task<Beneficiary> GetByIdAsync(int beneficiaryId)
+        public async Task<BeneficiaryResponseDto> GetByIdAsync(int beneficiaryId)
         {
-            return await _repo.GetByIdAsync(beneficiaryId);
+            var beneficiary = await _repo.GetByIdAsync(beneficiaryId);
+            return _mapper.Map<BeneficiaryResponseDto>(beneficiary);
         }
 
-        public async Task<IEnumerable<Beneficiary>> GetByCustomerIdAsync(int customerId)
+        public async Task<IEnumerable<BeneficiaryResponseDto>> GetByCustomerIdAsync(int customerId)
         {
-            return await _repo.GetByCustomerIdAsync(customerId);
+            var beneficiaries = await _repo.GetByCustomerIdAsync(customerId);
+            return _mapper.Map<List<BeneficiaryResponseDto>>(beneficiaries);
         }
 
-        public async Task<IEnumerable<Beneficiary>> GetAllAsync()
+        public async Task<IEnumerable<BeneficiaryResponseDto>> GetAllAsync()
         {
-            return await _repo.GetAllAsync();
+            var beneficiaries = await _repo.GetAllAsync();
+            return _mapper.Map<List<BeneficiaryResponseDto>>(beneficiaries);
         }
 
-        public async Task<Beneficiary> UpdateAsync(int beneficiaryId, UpdateBeneficiaryDto dto)
+        public async Task<BeneficiaryResponseDto> UpdateAsync(int beneficiaryId, UpdateBeneficiaryDto dto)
         {
             var beneficiary = await _repo.GetByIdAsync(beneficiaryId);
             if (beneficiary == null)
-                throw new Exception($"Beneficiary with ID {beneficiaryId} not found");
+                throw new KeyNotFoundException($"Beneficiary with ID {beneficiaryId} not found.");
 
             // Use AutoMapper to map only non-null fields
             _mapper.Map(dto, beneficiary);
 
-            // Update the UpdatedAt timestamp
-            beneficiary.UpdatedAt = DateTime.UtcNow;
+            var updated = await _repo.UpdateAsync(beneficiary);
+            return _mapper.Map<BeneficiaryResponseDto>(updated);
+        }
+
+        public async Task<BeneficiaryResponseDto> UpdateVerificationStatusAsync(int beneficiaryId, UpdateBeneficiaryVerificationStatusDto dto)
+        {
+            var beneficiary = await _repo.GetByIdAsync(beneficiaryId);
+            if (beneficiary == null)
+                throw new KeyNotFoundException($"Beneficiary with ID {beneficiaryId} not found.");
+
+            // Business logic: Update VerificationStatus
+            beneficiary.VerificationStatus = dto.VerificationStatus;
 
             var updated = await _repo.UpdateAsync(beneficiary);
-            return updated;
+            return _mapper.Map<BeneficiaryResponseDto>(updated);
         }
 
         public async Task<bool> DeleteAsync(int beneficiaryId)

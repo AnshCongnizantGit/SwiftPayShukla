@@ -25,99 +25,108 @@ namespace SwiftPay.Services
             _mapper = mapper;
         }
 
-        public async Task<KYCRecord> CreateAsync(CreateKYCRecordDto dto)
+        public async Task<KYCRecordResponseDto> CreateAsync(CreateKYCRecordDto dto)
         {
-            // Validate that User exists
+            // Validate that User exists - BUSINESS LOGIC
             var user = await _userRepo.GetByIdAsync(dto.UserID);
             if (user == null)
-                throw new Exception($"User with ID {dto.UserID} does not exist. Cannot create KYC record without a valid user.");
+                throw new KeyNotFoundException($"User with ID {dto.UserID} does not exist.");
 
-            // Check if KYC record already exists for this user
+            // Check if KYC record already exists for this user - BUSINESS LOGIC
             var existingKyc = await _repo.GetByUserIdAsync(dto.UserID);
             if (existingKyc != null)
-                throw new Exception($"A KYC record already exists for User ID {dto.UserID}. Each user can have only one KYC record.");
+                throw new InvalidOperationException($"A KYC record already exists for User ID {dto.UserID}.");
 
             // Use AutoMapper to map DTO to entity
             var entity = _mapper.Map<KYCRecord>(dto);
 
-            // Audit fields (CreatedAt, UpdatedAt, IsDeleted) are configured in database configuration
-            // VerificationStatus is set by mapper profile (Ignore) - configured at DB level
-
             var created = await _repo.CreateAsync(entity);
-
-            // Log the action - audit fields configured at DB level
-            var auditLog = new AuditLog
-            {
-                UserID = dto.UserID,
-                Action = "CREATE",
-                Resource = $"KYCRecord:{created.KYCID}"
-            };
-            await _auditLogRepo.CreateAsync(auditLog);
-
-            return created;
+            return _mapper.Map<KYCRecordResponseDto>(created);
         }
 
-        public async Task<KYCRecord> GetByIdAsync(int kycId)
+        public async Task<KYCRecordResponseDto> GetByIdAsync(int kycId)
         {
-            return await _repo.GetByIdAsync(kycId);
+            var kyc = await _repo.GetByIdAsync(kycId);
+            return _mapper.Map<KYCRecordResponseDto>(kyc);
         }
 
-        public async Task<KYCRecord> GetByUserIdAsync(int userId)
+        public async Task<KYCRecordResponseDto> GetByUserIdAsync(int userId)
         {
-            return await _repo.GetByUserIdAsync(userId);
+            var kyc = await _repo.GetByUserIdAsync(userId);
+            return _mapper.Map<KYCRecordResponseDto>(kyc);
         }
 
-        public async Task<IEnumerable<KYCRecord>> GetAllAsync()
+        public async Task<IEnumerable<KYCRecordResponseDto>> GetAllAsync()
         {
-            return await _repo.GetAllAsync();
+            var kycRecords = await _repo.GetAllAsync();
+            return _mapper.Map<List<KYCRecordResponseDto>>(kycRecords);
         }
 
-        public async Task<KYCRecord> UpdateAsync(int kycId, UpdateKYCRecordDto dto)
+        public async Task<KYCRecordResponseDto> UpdateAsync(int kycId, UpdateKYCRecordDto dto)
         {
             var kyc = await _repo.GetByIdAsync(kycId);
             if (kyc == null)
-                throw new Exception($"KYC Record with ID {kycId} not found");
+                throw new KeyNotFoundException($"KYC Record with ID {kycId} not found.");
 
             // Use AutoMapper to map only non-null fields
             _mapper.Map(dto, kyc);
 
-            // UpdatedAt is set on the application side (mapped at DB configuration level)
-            kyc.UpdatedAt = DateTime.UtcNow;
             var updated = await _repo.UpdateAsync(kyc);
-
-            // Log the action - audit fields configured at DB level
-            var auditLog = new AuditLog
-            {
-                UserID = kyc.UserID,
-                Action = "UPDATE",
-                Resource = $"KYCRecord:{kycId}"
-            };
-            await _auditLogRepo.CreateAsync(auditLog);
-
-            return updated;
+            return _mapper.Map<KYCRecordResponseDto>(updated);
         }
 
-        public async Task<KYCRecord> MarkAsVerifiedAsync(int kycId)
+        public async Task<KYCRecordResponseDto> UpdateStatusAsync(int kycId, UpdateKycStatusDto dto)
         {
             var kyc = await _repo.GetByIdAsync(kycId);
             if (kyc == null)
-                throw new Exception($"KYC Record with ID {kycId} not found");
+                throw new KeyNotFoundException($"KYC Record with ID {kycId} not found.");
+
+            // Business logic: Update VerificationStatus and optional Notes
+            kyc.VerificationStatus = dto.VerificationStatus;
+            if (!string.IsNullOrEmpty(dto.Notes))
+                kyc.Notes = dto.Notes;
+
+            // VerifiedDate and UpdatedAt are handled by AuditLogInterceptor automatically
+            var updated = await _repo.UpdateAsync(kyc);
+            return _mapper.Map<KYCRecordResponseDto>(updated);
+        }
+
+        public async Task<KYCRecordResponseDto> MarkAsVerifiedAsync(int kycId)
+        {
+            var kyc = await _repo.GetByIdAsync(kycId);
+            if (kyc == null)
+                throw new KeyNotFoundException($"KYC Record with ID {kycId} not found.");
 
             kyc.VerificationStatus = KycVerificationStatus.Verified;
-            kyc.VerifiedDate = DateTime.UtcNow;
-            kyc.UpdatedAt = DateTime.UtcNow;
+            // VerifiedDate and UpdatedAt are handled by AuditLogInterceptor automatically
             var updated = await _repo.UpdateAsync(kyc);
 
-            // Log the verification action - audit fields configured at DB level
-            var auditLog = new AuditLog
-            {
-                UserID = kyc.UserID,
-                Action = "VERIFY",
-                Resource = $"KYCRecord:{kycId}"
-            };
-            await _auditLogRepo.CreateAsync(auditLog);
+            return _mapper.Map<KYCRecordResponseDto>(updated);
+        }
 
-            return updated;
+        public async Task<KYCRecordListDto> GetPendingAsync(int pageNumber = 1, int pageSize = 10)
+        {
+            // Business logic: Retrieve only pending KYC records
+            var allRecords = await _repo.GetAllAsync();
+            
+            var pendingRecords = allRecords
+                .Where(kyc => kyc.VerificationStatus == KycVerificationStatus.Pending)
+                .OrderBy(kyc => kyc.CreatedAt)
+                .ToList();
+
+            var totalCount = pendingRecords.Count;
+            var pagedRecords = pendingRecords
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
+
+            return new KYCRecordListDto
+            {
+                Records = _mapper.Map<List<KYCRecordResponseDto>>(pagedRecords),
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
+            };
         }
 
         public async Task<bool> DeleteAsync(int kycId)

@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using SwiftPay.Services.Interfaces;
 using SwiftPay.DTOs.UserCustomerDTO;
-using SwiftPay.Domain.Remittance.Entities;
 
 namespace SwiftPay.Controllers
 {
@@ -23,26 +22,29 @@ namespace SwiftPay.Controllers
         /// Create a new beneficiary
         /// </summary>
         /// <param name="dto">Beneficiary creation data</param>
-        /// <returns>Created beneficiary object</returns>
+        /// <returns>Created beneficiary DTO</returns>
         /// <response code="200">Beneficiary created successfully</response>
         /// <response code="400">Invalid request data</response>
         /// <response code="500">Server error</response>
         [HttpPost]
-        [ProducesResponseType(typeof(Beneficiary), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BeneficiaryResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] CreateBeneficiaryDto dto)
         {
-            if (dto == null)
-                return BadRequest(new { message = "Request body is required." });
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
                 var created = await _service.CreateAsync(dto);
                 return Ok(new { message = "Beneficiary created successfully.", data = created });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -54,12 +56,12 @@ namespace SwiftPay.Controllers
         /// Get beneficiary by ID
         /// </summary>
         /// <param name="beneficiaryId">Beneficiary ID</param>
-        /// <returns>Beneficiary object</returns>
+        /// <returns>Beneficiary DTO</returns>
         /// <response code="200">Beneficiary found</response>
         /// <response code="404">Beneficiary not found</response>
         /// <response code="500">Server error</response>
         [HttpGet("{beneficiaryId}")]
-        [ProducesResponseType(typeof(Beneficiary), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BeneficiaryResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetById(int beneficiaryId)
@@ -82,11 +84,11 @@ namespace SwiftPay.Controllers
         /// Get all beneficiaries for a customer
         /// </summary>
         /// <param name="customerId">Customer ID</param>
-        /// <returns>List of beneficiaries for the customer</returns>
+        /// <returns>List of beneficiary DTOs for the customer</returns>
         /// <response code="200">Beneficiaries retrieved successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet("customer/{customerId}")]
-        [ProducesResponseType(typeof(IEnumerable<Beneficiary>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<BeneficiaryResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetByCustomerId(int customerId)
         {
@@ -104,11 +106,11 @@ namespace SwiftPay.Controllers
         /// <summary>
         /// Get all beneficiaries
         /// </summary>
-        /// <returns>List of all active beneficiaries</returns>
+        /// <returns>List of all active beneficiary DTOs</returns>
         /// <response code="200">Beneficiaries retrieved successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<Beneficiary>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<BeneficiaryResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAll()
         {
@@ -128,35 +130,64 @@ namespace SwiftPay.Controllers
         /// </summary>
         /// <param name="beneficiaryId">Beneficiary ID</param>
         /// <param name="dto">Beneficiary update data</param>
-        /// <returns>Updated beneficiary object</returns>
+        /// <returns>Updated beneficiary DTO</returns>
         /// <response code="200">Beneficiary updated successfully</response>
         /// <response code="404">Beneficiary not found</response>
         /// <response code="400">Invalid request data</response>
         /// <response code="500">Server error</response>
         [HttpPut("{beneficiaryId}")]
-        [ProducesResponseType(typeof(Beneficiary), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(BeneficiaryResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Update(int beneficiaryId, [FromBody] UpdateBeneficiaryDto dto)
         {
-            if (dto == null)
-                return BadRequest(new { message = "Request body is required." });
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
                 var updated = await _service.UpdateAsync(beneficiaryId, dto);
                 return Ok(new { message = "Beneficiary updated successfully.", data = updated });
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                if (ex.Message.Contains("not found"))
-                    return NotFound(new { message = ex.Message });
-                
                 return StatusCode(500, new { message = "An error occurred while updating the beneficiary.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Update beneficiary verification status
+        /// </summary>
+        /// <param name="beneficiaryId">Beneficiary ID</param>
+        /// <param name="dto">Verification status update data</param>
+        /// <returns>Updated beneficiary DTO with new verification status</returns>
+        /// <response code="200">Beneficiary verification status updated successfully</response>
+        /// <response code="404">Beneficiary not found</response>
+        /// <response code="500">Server error</response>
+        [HttpPatch("{beneficiaryId}/verification-status")]
+        [ProducesResponseType(typeof(BeneficiaryResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateVerificationStatus(int beneficiaryId, [FromBody] UpdateBeneficiaryVerificationStatusDto dto)
+        {
+            try
+            {
+                var updated = await _service.UpdateVerificationStatusAsync(beneficiaryId, dto);
+                return Ok(new { message = "Beneficiary verification status updated successfully.", data = updated });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while updating the beneficiary verification status.", error = ex.Message });
             }
         }
 

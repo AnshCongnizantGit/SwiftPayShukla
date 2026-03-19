@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using SwiftPay.Services.Interfaces;
@@ -20,43 +21,54 @@ namespace SwiftPay.Services
             _mapper = mapper;
         }
 
-        public async Task<AuditLog> LogActionAsync(int userId, string action, string resource)
+        public async Task<GetAuditLogDto> GetByIdAsync(int auditId)
         {
-            var auditLog = new AuditLog
+            var auditLog = await _repo.GetByIdAsync(auditId);
+            return _mapper.Map<GetAuditLogDto>(auditLog);
+        }
+
+        public async Task<IEnumerable<GetAuditLogDto>> GetByUserIdAsync(int userId)
+        {
+            var logs = await _repo.GetByUserIdAsync(userId);
+            return _mapper.Map<List<GetAuditLogDto>>(logs);
+        }
+
+        public async Task<IEnumerable<GetAuditLogDto>> GetByResourceAsync(string resource)
+        {
+            var logs = await _repo.GetByResourceAsync(resource);
+            return _mapper.Map<List<GetAuditLogDto>>(logs);
+        }
+
+        public async Task<IEnumerable<GetAuditLogDto>> GetAllAsync()
+        {
+            var logs = await _repo.GetAllAsync();
+            return _mapper.Map<List<GetAuditLogDto>>(logs);
+        }
+
+        public async Task<IEnumerable<GetAuditLogDto>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
+        {
+            var logs = await _repo.GetByDateRangeAsync(startDate, endDate);
+            return _mapper.Map<List<GetAuditLogDto>>(logs);
+        }
+
+        public async Task<AuditLogListDto> GetFilteredAsync(
+            int? userId = null,
+            string? resource = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            int pageNumber = 1,
+            int pageSize = 20)
+        {
+            var (logs, totalCount) = await _repo.GetFilteredAsync(userId, resource ?? "", startDate, endDate, pageNumber, pageSize);
+            var dtos = _mapper.Map<List<GetAuditLogDto>>(logs);
+
+            return new AuditLogListDto
             {
-                UserID = userId,
-                Action = action,
-                Resource = resource,
-                // Timestamp and audit fields (CreatedAt, UpdatedAt, IsDeleted) are configured 
-                // in database configuration with default values
+                AuditLogs = dtos,
+                TotalCount = totalCount,
+                PageNumber = pageNumber,
+                PageSize = pageSize
             };
-
-            return await _repo.CreateAsync(auditLog);
-        }
-
-        public async Task<AuditLog> GetByIdAsync(int auditId)
-        {
-            return await _repo.GetByIdAsync(auditId);
-        }
-
-        public async Task<IEnumerable<AuditLog>> GetByUserIdAsync(int userId)
-        {
-            return await _repo.GetByUserIdAsync(userId);
-        }
-
-        public async Task<IEnumerable<AuditLog>> GetByResourceAsync(string resource)
-        {
-            return await _repo.GetByResourceAsync(resource);
-        }
-
-        public async Task<IEnumerable<AuditLog>> GetAllAsync()
-        {
-            return await _repo.GetAllAsync();
-        }
-
-        public async Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTime startDate, DateTime endDate)
-        {
-            return await _repo.GetByDateRangeAsync(startDate, endDate);
         }
 
         public async Task<bool> DeleteAsync(int auditId)

@@ -21,14 +21,23 @@ namespace SwiftPay.Controllers
         [HttpPost] // This allows the "Create" action via an HTTP POST request
         public async Task<IActionResult> Create([FromBody] CreateComplianceCheckDto dto)
         {
-            // Matching your friend's null check pattern
-            if (dto == null)
-                return BadRequest("Request body is required.");
-
-            var created = await _service.CreateAsync(dto);
-
-            // Returns the result to the user with a 200 OK status
-            return Ok(created);
+            try
+            {
+                var created = await _service.CreateAsync(dto);
+                return Ok(created);
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while creating compliance check.", error = ex.Message });
+            }
         }
     }
 }

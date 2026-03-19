@@ -1,17 +1,17 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SwiftPay.DTOs.UserCustomerDTO;
-using SwiftPay.Domain.Remittance.Entities;
 
 namespace SwiftPay.Services.Interfaces
 {
     public interface IBeneficiaryService
     {
-        Task<Beneficiary> CreateAsync(CreateBeneficiaryDto dto);
-        Task<Beneficiary> GetByIdAsync(int beneficiaryId);
-        Task<IEnumerable<Beneficiary>> GetByCustomerIdAsync(int customerId);
-        Task<IEnumerable<Beneficiary>> GetAllAsync();
-        Task<Beneficiary> UpdateAsync(int beneficiaryId, UpdateBeneficiaryDto dto);
+        Task<BeneficiaryResponseDto> CreateAsync(CreateBeneficiaryDto dto);
+        Task<BeneficiaryResponseDto> GetByIdAsync(int beneficiaryId);
+        Task<IEnumerable<BeneficiaryResponseDto>> GetByCustomerIdAsync(int customerId);
+        Task<IEnumerable<BeneficiaryResponseDto>> GetAllAsync();
+        Task<BeneficiaryResponseDto> UpdateAsync(int beneficiaryId, UpdateBeneficiaryDto dto);
+        Task<BeneficiaryResponseDto> UpdateVerificationStatusAsync(int beneficiaryId, UpdateBeneficiaryVerificationStatusDto dto);
         Task<bool> DeleteAsync(int beneficiaryId);
     }
 }

@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using SwiftPay.Services.Interfaces;
 using SwiftPay.DTOs.UserCustomerDTO;
-using SwiftPay.Domain.Remittance.Entities;
 
 namespace SwiftPay.Controllers
 {
@@ -24,26 +23,30 @@ namespace SwiftPay.Controllers
         /// Create a new KYC record
         /// </summary>
         /// <param name="dto">KYC record creation data</param>
-        /// <returns>Created KYC record object</returns>
+        /// <returns>Created KYC record DTO</returns>
         /// <response code="200">KYC record created successfully</response>
         /// <response code="400">Invalid request data</response>
+        /// <response code="409">Business conflict (e.g., duplicate KYC record)</response>
         /// <response code="500">Server error</response>
         [HttpPost]
-        [ProducesResponseType(typeof(KYCRecord), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(KYCRecordResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] CreateKYCRecordDto dto)
         {
-            if (dto == null)
-                return BadRequest(new { message = "Request body is required." });
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
                 var created = await _service.CreateAsync(dto);
                 return Ok(new { message = "KYC record created successfully.", data = created });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -55,12 +58,12 @@ namespace SwiftPay.Controllers
         /// Get KYC record by ID
         /// </summary>
         /// <param name="kycId">KYC record ID</param>
-        /// <returns>KYC record object</returns>
+        /// <returns>KYC record DTO</returns>
         /// <response code="200">KYC record found</response>
         /// <response code="404">KYC record not found</response>
         /// <response code="500">Server error</response>
         [HttpGet("{kycId}")]
-        [ProducesResponseType(typeof(KYCRecord), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(KYCRecordResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetById(int kycId)
@@ -83,12 +86,12 @@ namespace SwiftPay.Controllers
         /// Get KYC record by user ID
         /// </summary>
         /// <param name="userId">User ID</param>
-        /// <returns>KYC record object</returns>
+        /// <returns>KYC record DTO</returns>
         /// <response code="200">KYC record found</response>
         /// <response code="404">KYC record not found</response>
         /// <response code="500">Server error</response>
         [HttpGet("user/{userId}")]
-        [ProducesResponseType(typeof(KYCRecord), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(KYCRecordResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetByUserId(int userId)
@@ -110,11 +113,11 @@ namespace SwiftPay.Controllers
         /// <summary>
         /// Get all KYC records
         /// </summary>
-        /// <returns>List of all KYC records</returns>
+        /// <returns>List of all KYC record DTOs</returns>
         /// <response code="200">KYC records retrieved successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<KYCRecord>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<KYCRecordResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAll()
         {
@@ -130,32 +133,64 @@ namespace SwiftPay.Controllers
         }
 
         /// <summary>
-        /// Update KYC record
+        /// Get pending KYC records for compliance review (with pagination)
+        /// </summary>
+        /// <param name="pageNumber">Page number (default: 1)</param>
+        /// <param name="pageSize">Page size (default: 10, max: 100)</param>
+        /// <returns>List of pending KYC record DTOs with pagination metadata</returns>
+        /// <response code="200">Pending KYC records retrieved successfully</response>
+        /// <response code="400">Invalid pagination parameters</response>
+        /// <response code="500">Server error</response>
+        [HttpGet("pending")]
+        [ProducesResponseType(typeof(KYCRecordListDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> GetPending([FromQuery] int pageNumber = 1, [FromQuery] int pageSize = 10)
+        {
+            try
+            {
+                // Validate custom business logic (pagination check)
+                if (pageNumber < 1 || pageSize < 1 || pageSize > 100)
+                    return BadRequest(new { message = "PageNumber must be >= 1 and PageSize must be between 1 and 100." });
+
+                var response = await _service.GetPendingAsync(pageNumber, pageSize);
+                return Ok(new { message = "Pending KYC records retrieved successfully.", data = response });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while retrieving pending KYC records.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Update KYC record details
         /// </summary>
         /// <param name="kycId">KYC record ID</param>
         /// <param name="dto">Update data</param>
-        /// <returns>Updated KYC record</returns>
+        /// <returns>Updated KYC record DTO</returns>
         /// <response code="200">KYC record updated successfully</response>
-        /// <response code="400">Invalid request data</response>
         /// <response code="404">KYC record not found</response>
+        /// <response code="409">Business conflict</response>
         /// <response code="500">Server error</response>
         [HttpPut("{kycId}")]
-        [ProducesResponseType(typeof(KYCRecord), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(typeof(KYCRecordResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Update(int kycId, [FromBody] UpdateKYCRecordDto dto)
         {
-            if (dto == null)
-                return BadRequest(new { message = "Request body is required." });
-
             try
             {
                 var updated = await _service.UpdateAsync(kycId, dto);
-                if (updated == null)
-                    return NotFound(new { message = $"KYC record with ID {kycId} not found." });
-
                 return Ok(new { message = "KYC record updated successfully.", data = updated });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -164,15 +199,45 @@ namespace SwiftPay.Controllers
         }
 
         /// <summary>
-        /// Mark KYC record as verified
+        /// Update KYC verification status (Approve/Reject/Pending)
         /// </summary>
         /// <param name="kycId">KYC record ID</param>
-        /// <returns>Updated KYC record with verified status</returns>
+        /// <param name="dto">Status update data with optional notes</param>
+        /// <returns>Updated KYC record DTO with new status</returns>
+        /// <response code="200">KYC status updated successfully</response>
+        /// <response code="404">KYC record not found</response>
+        /// <response code="500">Server error</response>
+        [HttpPatch("{kycId}/status")]
+        [ProducesResponseType(typeof(KYCRecordResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateStatus(int kycId, [FromBody] UpdateKycStatusDto dto)
+        {
+            try
+            {
+                var updated = await _service.UpdateStatusAsync(kycId, dto);
+                return Ok(new { message = "KYC record status updated successfully.", data = updated });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while updating the KYC status.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Mark KYC record as verified (Legacy endpoint - use UpdateStatus instead)
+        /// </summary>
+        /// <param name="kycId">KYC record ID</param>
+        /// <returns>Updated KYC record DTO</returns>
         /// <response code="200">KYC record marked as verified</response>
         /// <response code="404">KYC record not found</response>
         /// <response code="500">Server error</response>
         [HttpPut("{kycId}/verify")]
-        [ProducesResponseType(typeof(KYCRecord), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(KYCRecordResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> MarkAsVerified(int kycId)
@@ -180,10 +245,11 @@ namespace SwiftPay.Controllers
             try
             {
                 var verified = await _service.MarkAsVerifiedAsync(kycId);
-                if (verified == null)
-                    return NotFound(new { message = $"KYC record with ID {kycId} not found." });
-
                 return Ok(new { message = "KYC record marked as verified.", data = verified });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -192,10 +258,10 @@ namespace SwiftPay.Controllers
         }
 
         /// <summary>
-        /// Delete KYC record
+        /// Delete KYC record (soft delete)
         /// </summary>
         /// <param name="kycId">KYC record ID</param>
-        /// <returns>Deletion result</returns>
+        /// <returns>Success or failure message</returns>
         /// <response code="200">KYC record deleted successfully</response>
         /// <response code="404">KYC record not found</response>
         /// <response code="500">Server error</response>

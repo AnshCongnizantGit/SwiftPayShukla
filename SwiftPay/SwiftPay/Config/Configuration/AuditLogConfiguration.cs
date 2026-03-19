@@ -41,6 +41,15 @@ namespace SwiftPay.Config.Configuration
                 .IsRequired()
                 .HasDefaultValue(false);
 
+            // Create index on UserID for faster queries
+            builder.HasIndex(a => a.UserID);
+
+            // Create index on Resource for faster queries
+            builder.HasIndex(a => a.Resource);
+
+            // Create composite index on Timestamp and UserID for date range queries
+            builder.HasIndex(a => new { a.Timestamp, a.UserID });
+
             // Foreign key to User - Restrict delete to preserve audit trail
             builder.HasOne(a => a.User)
                 .WithMany()

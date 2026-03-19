@@ -21,71 +21,65 @@ namespace SwiftPay.Services
             _mapper = mapper;
         }
 
-        public async Task<User> CreateAsync(CreateUserDto dto)
+        public async Task<UserResponseDto> CreateAsync(CreateUserDto dto)
         {
-            // Check if email already exists
+            // Check if email already exists - BUSINESS LOGIC
             var existingEmail = await _repo.GetByEmailAsync(dto.Email);
             if (existingEmail != null)
-                throw new Exception($"Email '{dto.Email}' is already registered. Please use a different email address.");
+                throw new InvalidOperationException($"Email '{dto.Email}' is already registered. Please use a different email address.");
 
             // Use AutoMapper to map DTO to entity
             var entity = _mapper.Map<User>(dto);
 
-            // Set server-controlled audit/default fields
-            entity.CreatedAt = DateTime.UtcNow;
-            entity.UpdatedAt = DateTime.UtcNow;
-            entity.IsDeleted = false;
-            entity.Status = UserStatus.Active;
-
             var created = await _repo.CreateAsync(entity);
-            return created;
+            return _mapper.Map<UserResponseDto>(created);
         }
 
-        public async Task<User> GetByIdAsync(int userId)
+        public async Task<UserResponseDto> GetByIdAsync(int userId)
         {
-            return await _repo.GetByIdAsync(userId);
+            var user = await _repo.GetByIdAsync(userId);
+            return _mapper.Map<UserResponseDto>(user);
         }
 
-        public async Task<User> GetByEmailAsync(string email)
+        public async Task<UserResponseDto> GetByEmailAsync(string email)
         {
-            return await _repo.GetByEmailAsync(email);
+            var user = await _repo.GetByEmailAsync(email);
+            return _mapper.Map<UserResponseDto>(user);
         }
 
-        public async Task<IEnumerable<User>> GetAllAsync()
+        public async Task<IEnumerable<UserResponseDto>> GetAllAsync()
         {
-            return await _repo.GetAllAsync();
+            var users = await _repo.GetAllAsync();
+            return _mapper.Map<List<UserResponseDto>>(users);
         }
 
-        public async Task<User> UpdateAsync(int userId, UpdateUserDto dto)
+        public async Task<UserResponseDto> UpdateAsync(int userId, UpdateUserDto dto)
         {
             var user = await _repo.GetByIdAsync(userId);
             if (user == null)
-                throw new Exception($"User with ID {userId} not found");
+                throw new KeyNotFoundException($"User with ID {userId} not found.");
 
-            // Check email uniqueness when updating email
+            // Check email uniqueness when updating email - BUSINESS LOGIC
             if (!string.IsNullOrEmpty(dto.Email) && dto.Email != user.Email)
             {
                 var existingEmail = await _repo.GetByEmailAsync(dto.Email);
                 if (existingEmail != null)
-                    throw new Exception($"Email '{dto.Email}' is already in use by another user. Please use a different email address.");
+                    throw new InvalidOperationException($"Email '{dto.Email}' is already in use by another user.");
             }
 
-            // Check phone uniqueness when updating phone
+            // Check phone uniqueness when updating phone - BUSINESS LOGIC
             if (!string.IsNullOrEmpty(dto.Phone) && dto.Phone != user.Phone)
             {
                 var existingPhone = await _repo.GetByPhoneAsync(dto.Phone);
                 if (existingPhone != null)
-                    throw new Exception($"Phone number '{dto.Phone}' is already in use by another user. Please use a different phone number.");
+                    throw new InvalidOperationException($"Phone number '{dto.Phone}' is already in use by another user.");
             }
 
             // Use AutoMapper to map only non-null fields
             _mapper.Map(dto, user);
 
-            // Update the UpdatedAt timestamp
-            user.UpdatedAt = DateTime.UtcNow;
-
             var updated = await _repo.UpdateAsync(user);
-            return updated;
+            return _mapper.Map<UserResponseDto>(updated);
         }
 
         public async Task<bool> DeleteAsync(int userId)

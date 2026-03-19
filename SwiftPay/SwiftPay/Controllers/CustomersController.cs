@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using System.Collections.Generic;
 using SwiftPay.Services.Interfaces;
 using SwiftPay.DTOs.UserCustomerDTO;
-using SwiftPay.Domain.Remittance.Entities;
 
 namespace SwiftPay.Controllers
 {
@@ -23,26 +22,29 @@ namespace SwiftPay.Controllers
         /// Create a new customer profile
         /// </summary>
         /// <param name="dto">Customer creation data</param>
-        /// <returns>Created customer object</returns>
+        /// <returns>Created customer DTO</returns>
         /// <response code="200">Customer created successfully</response>
         /// <response code="400">Invalid request data</response>
         /// <response code="500">Server error</response>
         [HttpPost]
-        [ProducesResponseType(typeof(CustomerProfile), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomerResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Create([FromBody] CreateCustomerDto dto)
         {
-            if (dto == null)
-                return BadRequest(new { message = "Request body is required." });
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
                 var created = await _service.CreateAsync(dto);
                 return Ok(new { message = "Customer created successfully.", data = created });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return BadRequest(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
             }
             catch (Exception ex)
             {
@@ -54,12 +56,12 @@ namespace SwiftPay.Controllers
         /// Get customer by ID
         /// </summary>
         /// <param name="customerId">Customer ID</param>
-        /// <returns>Customer object</returns>
+        /// <returns>Customer DTO</returns>
         /// <response code="200">Customer found</response>
         /// <response code="404">Customer not found</response>
         /// <response code="500">Server error</response>
         [HttpGet("{customerId}")]
-        [ProducesResponseType(typeof(CustomerProfile), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomerResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetById(int customerId)
@@ -82,12 +84,12 @@ namespace SwiftPay.Controllers
         /// Get customer by User ID
         /// </summary>
         /// <param name="userId">User ID</param>
-        /// <returns>Customer object</returns>
+        /// <returns>Customer DTO</returns>
         /// <response code="200">Customer found</response>
         /// <response code="404">Customer not found</response>
         /// <response code="500">Server error</response>
         [HttpGet("user/{userId}")]
-        [ProducesResponseType(typeof(CustomerProfile), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomerResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetByUserId(int userId)
@@ -109,11 +111,11 @@ namespace SwiftPay.Controllers
         /// <summary>
         /// Get all customers
         /// </summary>
-        /// <returns>List of all active customers</returns>
+        /// <returns>List of all active customer DTOs</returns>
         /// <response code="200">Customers retrieved successfully</response>
         /// <response code="500">Server error</response>
         [HttpGet]
-        [ProducesResponseType(typeof(IEnumerable<CustomerProfile>), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(IEnumerable<CustomerResponseDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> GetAll()
         {
@@ -133,35 +135,64 @@ namespace SwiftPay.Controllers
         /// </summary>
         /// <param name="customerId">Customer ID</param>
         /// <param name="dto">Customer update data</param>
-        /// <returns>Updated customer object</returns>
+        /// <returns>Updated customer DTO</returns>
         /// <response code="200">Customer updated successfully</response>
         /// <response code="404">Customer not found</response>
         /// <response code="400">Invalid request data</response>
         /// <response code="500">Server error</response>
         [HttpPut("{customerId}")]
-        [ProducesResponseType(typeof(CustomerProfile), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(CustomerResponseDto), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status409Conflict)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         public async Task<IActionResult> Update(int customerId, [FromBody] UpdateCustomerDto dto)
         {
-            if (dto == null)
-                return BadRequest(new { message = "Request body is required." });
-
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             try
             {
                 var updated = await _service.UpdateAsync(customerId, dto);
                 return Ok(new { message = "Customer updated successfully.", data = updated });
             }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (InvalidOperationException ex)
+            {
+                return Conflict(new { message = ex.Message });
+            }
             catch (Exception ex)
             {
-                if (ex.Message.Contains("not found"))
-                    return NotFound(new { message = ex.Message });
-                
                 return StatusCode(500, new { message = "An error occurred while updating the customer.", error = ex.Message });
+            }
+        }
+
+        /// <summary>
+        /// Update customer risk rating
+        /// </summary>
+        /// <param name="customerId">Customer ID</param>
+        /// <param name="dto">Risk rating update data</param>
+        /// <returns>Updated customer DTO with new risk rating</returns>
+        /// <response code="200">Customer risk rating updated successfully</response>
+        /// <response code="404">Customer not found</response>
+        /// <response code="500">Server error</response>
+        [HttpPatch("{customerId}/risk-rating")]
+        [ProducesResponseType(typeof(CustomerResponseDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> UpdateRiskRating(int customerId, [FromBody] UpdateCustomerRiskRatingDto dto)
+        {
+            try
+            {
+                var updated = await _service.UpdateRiskRatingAsync(customerId, dto);
+                return Ok(new { message = "Customer risk rating updated successfully.", data = updated });
+            }
+            catch (KeyNotFoundException ex)
+            {
+                return NotFound(new { message = ex.Message });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, new { message = "An error occurred while updating the customer risk rating.", error = ex.Message });
             }
         }
 

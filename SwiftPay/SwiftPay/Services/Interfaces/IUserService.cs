@@ -1,17 +1,16 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using SwiftPay.DTOs.UserCustomerDTO;
-using SwiftPay.Models;
 
 namespace SwiftPay.Services.Interfaces
 {
     public interface IUserService
     {
-        Task<User> CreateAsync(CreateUserDto dto);
-        Task<User> GetByIdAsync(int userId);
-        Task<User> GetByEmailAsync(string email);
-        Task<IEnumerable<User>> GetAllAsync();
-        Task<User> UpdateAsync(int userId, UpdateUserDto dto);
+        Task<UserResponseDto> CreateAsync(CreateUserDto dto);
+        Task<UserResponseDto> GetByIdAsync(int userId);
+        Task<UserResponseDto> GetByEmailAsync(string email);
+        Task<IEnumerable<UserResponseDto>> GetAllAsync();
+        Task<UserResponseDto> UpdateAsync(int userId, UpdateUserDto dto);
         Task<bool> DeleteAsync(int userId);
     }
 }

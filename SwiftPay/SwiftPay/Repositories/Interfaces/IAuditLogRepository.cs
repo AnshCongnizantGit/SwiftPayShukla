@@ -13,6 +13,17 @@ namespace SwiftPay.Repositories.Interfaces
         Task<IEnumerable<AuditLog>> GetByResourceAsync(string resource);
         Task<IEnumerable<AuditLog>> GetAllAsync();
         Task<IEnumerable<AuditLog>> GetByDateRangeAsync(DateTime startDate, DateTime endDate);
+        
+        // Advanced filtering with multiple criteria
+        Task<(IEnumerable<AuditLog> logs, int totalCount)> GetFilteredAsync(
+            int? userId = null,
+            string resource = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            int pageNumber = 1,
+            int pageSize = 20);
+        
         Task<bool> DeleteAsync(int auditId);
     }
 }
+

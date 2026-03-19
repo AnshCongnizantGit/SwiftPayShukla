@@ -1057,6 +1057,9 @@ namespace SwiftPay.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<string>("RemittanceRequestRemitId")
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<DateTime>("UpdateDate")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("datetime2")
@@ -1077,6 +1080,8 @@ namespace SwiftPay.Migrations
                     b.HasKey("DocumentId");
 
                     b.HasIndex("RemitId");
+
+                    b.HasIndex("RemittanceRequestRemitId");
 
                     b.ToTable("RemittanceDocuments", (string)null);
                 });
@@ -1165,6 +1170,9 @@ namespace SwiftPay.Migrations
                         .HasMaxLength(64)
                         .HasColumnType("nvarchar(64)");
 
+                    b.Property<string>("RemittanceRequestRemitId")
+                        .HasColumnType("nvarchar(64)");
+
                     b.Property<int>("Result")
                         .HasColumnType("int");
 
@@ -1180,6 +1188,8 @@ namespace SwiftPay.Migrations
                     b.HasKey("ValidationId");
 
                     b.HasIndex("RemitId");
+
+                    b.HasIndex("RemittanceRequestRemitId");
 
                     b.ToTable("RemitValidations", (string)null);
                 });
@@ -1443,6 +1453,10 @@ namespace SwiftPay.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
+                    b.HasOne("SwiftPay.Domain.Remittance.Entities.RemittanceRequest", null)
+                        .WithMany("Documents")
+                        .HasForeignKey("RemittanceRequestRemitId");
+
                     b.Navigation("RemittanceRequest");
                 });
 
@@ -1453,6 +1467,10 @@ namespace SwiftPay.Migrations
                         .HasForeignKey("RemitId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("SwiftPay.Domain.Remittance.Entities.RemittanceRequest", null)
+                        .WithMany("Validations")
+                        .HasForeignKey("RemittanceRequestRemitId");
 
                     b.Navigation("RemittanceRequest");
                 });
@@ -1474,6 +1492,13 @@ namespace SwiftPay.Migrations
                     b.Navigation("Role");
 
                     b.Navigation("User");
+                });
+
+            modelBuilder.Entity("SwiftPay.Domain.Remittance.Entities.RemittanceRequest", b =>
+                {
+                    b.Navigation("Documents");
+
+                    b.Navigation("Validations");
                 });
 
             modelBuilder.Entity("SwiftPay.Models.Role", b =>

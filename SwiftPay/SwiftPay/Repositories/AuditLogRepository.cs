@@ -68,6 +68,47 @@ namespace SwiftPay.Repositories
                 .ToListAsync();
         }
 
+        public async Task<(IEnumerable<AuditLog> logs, int totalCount)> GetFilteredAsync(
+            int? userId = null,
+            string? resource = null,
+            DateTime? startDate = null,
+            DateTime? endDate = null,
+            int pageNumber = 1,
+            int pageSize = 20)
+        {
+            var query = _db.Set<AuditLog>()
+                .Include(a => a.User)
+                .Where(a => !a.IsDeleted);
+
+            // Apply UserId filter if provided
+            if (userId.HasValue)
+                query = query.Where(a => a.UserID == userId.Value);
+
+            // Apply Resource filter if provided
+            if (!string.IsNullOrWhiteSpace(resource))
+                query = query.Where(a => a.Resource.Contains(resource));
+
+            // Apply StartDate filter if provided
+            if (startDate.HasValue)
+                query = query.Where(a => a.Timestamp >= startDate.Value);
+
+            // Apply EndDate filter if provided
+            if (endDate.HasValue)
+                query = query.Where(a => a.Timestamp <= endDate.Value);
+
+            // Get total count before pagination
+            var totalCount = await query.CountAsync();
+
+            // Apply pagination
+            var logs = await query
+                .OrderByDescending(a => a.Timestamp)
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            return (logs, totalCount);
+        }
+
         public async Task<bool> DeleteAsync(int auditId)
         {
             var auditLog = await GetByIdAsync(auditId);
