@@ -1,33 +1,92 @@
-﻿using System.Threading.Tasks;
-using SwiftPay.Repositories.Interfaces;
-using SwiftPay.Domain.Remittance.Entities;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using SwiftPay.Configuration;
+using SwiftPay.Domain.Remittance.Entities;
+using SwiftPay.Models;
+using SwiftPay.Repositories.Interfaces;
 
 namespace SwiftPay.Repositories
 {
-    public class RemittanceRepository : IRemittanceRepository
-    {
-        private readonly AppDbContext _db;
+	public class RemittanceRepository : IRemittanceRepository
+	{
+		private readonly AppDbContext _db;
 
-        public RemittanceRepository(AppDbContext db)
-        {
-            _db = db;
-        }
+		public RemittanceRepository(AppDbContext db)
+		{
+			_db = db;
+		}
 
+		/// <summary>
+		/// Creates a new remittance request and saves it to the database.
+		/// </summary>
+		public async Task<RemittanceRequest> CreateAsync(RemittanceRequest entity)
+		{
+			await _db.Set<RemittanceRequest>().AddAsync(entity);
+			var affected = await _db.SaveChangesAsync();
 
-        /// <summary>
-        /// Asynchronously creates a new remittance request and persists it to the database.
-        /// </summary>
-        /// <remarks>This method adds the specified entity to the database context and commits the
-        /// changes. Ensure that the entity is properly initialized before calling this method.</remarks>
-        /// <param name="entity">The remittance request entity to add. Cannot be null.</param>
-        /// <returns>A task that represents the asynchronous operation. The task result contains the created remittance request
-        /// entity, including any generated values.</returns>
-        public async Task<RemittanceRequest> CreateAsync(RemittanceRequest entity)
-        {
-            await _db.Set<RemittanceRequest>().AddAsync(entity);
-            await _db.SaveChangesAsync();
-            return entity;
-        }
-    }
+			if (affected == 0)
+				throw new InvalidOperationException("Insert failed; no rows were affected.");
+
+			return entity;
+		}
+
+		/// <summary>
+		/// Retrieves a remittance request by its RemitId (string).
+		/// Includes related documents and validations.
+		/// </summary>
+		public async Task<RemittanceRequest?> GetByIdAsync(string remitId)
+		{
+			if (string.IsNullOrWhiteSpace(remitId))
+				return null;
+
+			return await _db.Set<RemittanceRequest>()
+				.Include(r => r.Documents)
+				.Include(r => r.Validations)
+				.FirstOrDefaultAsync(r => r.RemitId == remitId);
+		}
+
+		/// <summary>
+		/// Updates an existing remittance request.
+		/// </summary>
+		public async Task UpdateAsync(RemittanceRequest remittance)
+		{
+			_db.Set<RemittanceRequest>().Update(remittance);
+
+			var affected = await _db.SaveChangesAsync();
+			if (affected == 0)
+				throw new InvalidOperationException("Update failed; no rows were affected.");
+		}
+
+		/// <summary>
+		/// Persists a list of validation results for a remittance.
+		/// </summary>
+		public async Task AddValidationsAsync(List<RemitValidation> validations)
+		{
+			if (validations == null || validations.Count == 0)
+				return;
+
+			await _db.Set<RemitValidation>().AddRangeAsync(validations);
+
+			var affected = await _db.SaveChangesAsync();
+			if (affected == 0)
+				throw new InvalidOperationException("Validation insert failed.");
+		}
+
+		/// <summary>
+		/// Retrieves all validation records for a remittance.
+		/// </summary>
+		public async Task<List<RemitValidation>> GetValidationsByRemitIdAsync(string remitId)
+		{
+			if (string.IsNullOrWhiteSpace(remitId))
+				return new List<RemitValidation>();
+
+			return await _db.Set<RemitValidation>()
+				.Where(v => v.RemitId == remitId)
+				.OrderBy(v => v.CheckedDate)
+				.ToListAsync();
+		}
+	}
 }
