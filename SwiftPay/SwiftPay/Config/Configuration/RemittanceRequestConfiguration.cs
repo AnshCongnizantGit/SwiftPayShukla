@@ -71,6 +71,14 @@ namespace SwiftPay.Config.Configuration
 			builder.Property(r => r.UpdateDate).HasDefaultValueSql("GETUTCDATE()");
 			builder.Property(r => r.IsDeleted).HasDefaultValue(false);
 
+			// Explicitly configure the relationship from the dependent side as well
+			// to avoid EF creating a shadow FK column (e.g. RemittanceRequestRemitId).
+			builder.HasOne(v => v.RemittanceRequest)
+				.WithMany(r => r.Validations)
+				.HasForeignKey(v => v.RemitId)
+				.HasPrincipalKey(r => r.RemitId)
+				.OnDelete(DeleteBehavior.Cascade);
+
 		}
 
 		// --- 3. Document Configuration ---
@@ -98,6 +106,13 @@ namespace SwiftPay.Config.Configuration
 			builder.Property(r => r.CreatedDate).HasDefaultValueSql("GETUTCDATE()");
 			builder.Property(r => r.UpdateDate).HasDefaultValueSql("GETUTCDATE()");
 			builder.Property(r => r.IsDeleted).HasDefaultValue(false);
+
+			// Configure dependent -> principal mapping explicitly
+			builder.HasOne(d => d.RemittanceRequest)
+				.WithMany(r => r.Documents)
+				.HasForeignKey(d => d.RemitId)
+				.HasPrincipalKey(r => r.RemitId)
+				.OnDelete(DeleteBehavior.Cascade);
 		}
 	}
 }

@@ -9,7 +9,10 @@ namespace SwiftPay.Models
 		public int DocumentId { get; set; }         // PK
 
         public string RemitId { get; set; }            // FK -> RemittanceRequest (string GUID)
-		public virtual Domain.Remittance.Entities.RemittanceRequest RemittanceRequest { get; set; }
+
+        [System.ComponentModel.DataAnnotations.Schema.ForeignKey("RemitId")]
+        [System.ComponentModel.DataAnnotations.Schema.InverseProperty("Documents")]
+        public virtual Domain.Remittance.Entities.RemittanceRequest RemittanceRequest { get; set; }
 
 		public DocumentType DocType { get; set; }    // IDProof/SoF/Invoice/Declaration
 		public string FileURI { get; set; }          // required, non-empty

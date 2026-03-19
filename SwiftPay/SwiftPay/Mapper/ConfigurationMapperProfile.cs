@@ -27,6 +27,7 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
 
+<<<<<<< Updated upstream
             // ===== AUDIT LOG MAPPINGS =====
 
             // Map AuditLog -> GetAuditLogDto
@@ -90,6 +91,19 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
+=======
+            // Map RemittanceRequest -> CreateRemittanceResponseDto
+            CreateMap<RemittanceRequest, CreateRemittanceResponseDto>()
+                .ForMember(dest => dest.RemitId, opt => opt.MapFrom(src => src.RemitId))
+                .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status.ToString()))
+                .ForMember(dest => dest.FromCurrency, opt => opt.MapFrom(src => src.FromCurrency))
+                .ForMember(dest => dest.ToCurrency, opt => opt.MapFrom(src => src.ToCurrency))
+                .ForMember(dest => dest.SendAmount, opt => opt.MapFrom(src => src.SendAmount))
+                .ForMember(dest => dest.ReceiverAmount, opt => opt.MapFrom(src => src.ReceiverAmount))
+                .ForMember(dest => dest.RateApplied, opt => opt.MapFrom(src => src.RateApplied))
+                .ForMember(dest => dest.FeeApplied, opt => opt.MapFrom(src => src.FeeApplied))
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate));
+>>>>>>> Stashed changes
 
             // ===== USER MAPPINGS =====
 
@@ -283,6 +297,7 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
 
+<<<<<<< Updated upstream
             // ===== KYC RECORD MAPPINGS =====
 
             // Map CreateKYCRecordDto -> KYCRecord
@@ -359,6 +374,34 @@ namespace SwiftPay.Mapper
 
             // UpdateCustomerRiskRatingDto and UpdateBeneficiaryVerificationStatusDto are DTO-only,
             // no entity mapping needed - values are directly assigned in service layer
+=======
+            // RemitValidation -> RemitValidationDto
+            CreateMap<RemitValidation, RemitValidationDto>()
+                .ForMember(dest => dest.ValidationId, opt => opt.MapFrom(src => src.ValidationId))
+                .ForMember(dest => dest.RemitId, opt => opt.MapFrom(src => src.RemitId))
+                .ForMember(dest => dest.Rule, opt => opt.MapFrom(src => src.RuleName.ToString()))
+                .ForMember(dest => dest.Result, opt => opt.MapFrom(src => src.Result.ToString()))
+                .ForMember(dest => dest.Message, opt => opt.MapFrom(src => src.Message))
+                .ForMember(dest => dest.CheckedDate, opt => opt.MapFrom(src => src.CheckedDate));
+
+            // Document mappings
+            CreateMap<CreateDocumentDto, Document>()
+                .ForMember(dest => dest.DocumentId, opt => opt.Ignore())
+                .ForMember(dest => dest.UploadedDate, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
+
+            CreateMap<Document, DocumentResponseDto>()
+                .ForMember(dest => dest.DocumentId, opt => opt.MapFrom(src => src.DocumentId))
+                .ForMember(dest => dest.RemitId, opt => opt.MapFrom(src => src.RemitId))
+                .ForMember(dest => dest.DocType, opt => opt.MapFrom(src => src.DocType.ToString()))
+                .ForMember(dest => dest.FileURI, opt => opt.MapFrom(src => src.FileURI))
+                .ForMember(dest => dest.VerificationStatus, opt => opt.MapFrom(src => src.VerificationStatus.ToString()))
+                .ForMember(dest => dest.UploadedDate, opt => opt.MapFrom(src => src.UploadedDate))
+                .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate));
+
+>>>>>>> Stashed changes
         }
     }
 }

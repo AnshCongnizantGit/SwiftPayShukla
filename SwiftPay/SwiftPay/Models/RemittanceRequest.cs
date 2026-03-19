@@ -1,6 +1,9 @@
 ﻿using System;
 using SwiftPay.Constants.Enums;
+using SwiftPay.Models; // for Document and RemitValidation references
+using System.ComponentModel.DataAnnotations.Schema;
 //using SwiftPay.Domain.Remittance.Enums;
+
 
 namespace SwiftPay.Domain.Remittance.Entities
 {
@@ -48,9 +51,16 @@ namespace SwiftPay.Domain.Remittance.Entities
 
 		public bool IsDeleted { get; set; }
 
-		// Navigation (optional to add later)
-		// public ICollection<RemitValidation> Validations { get; set; }
-		// public ICollection<Document> Documents { get; set; }
+
+        // Navigation
+        // RemitValidation lives in SwiftPay.Models namespace
+        [InverseProperty("RemittanceRequest")]
+        public ICollection<RemitValidation>? Validations { get; set; }
+
+        // Document navigation (commented if Document entity is not used)
+        // If you don't have Document entity/table, keep this commented
+        [InverseProperty("RemittanceRequest")]
+        public ICollection<Document>? Documents { get; set; }
 		//added something
 	}
 }
