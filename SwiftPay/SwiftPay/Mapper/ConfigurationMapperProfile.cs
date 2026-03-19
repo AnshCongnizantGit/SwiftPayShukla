@@ -29,7 +29,6 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
 
-<<<<<<< Updated upstream
             // ===== AUDIT LOG MAPPINGS =====
 
             // Map AuditLog -> GetAuditLogDto
@@ -93,7 +92,6 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.IsActive, opt => opt.MapFrom(src => src.IsActive))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt));
-=======
             // Map RemittanceRequest -> CreateRemittanceResponseDto
             CreateMap<RemittanceRequest, CreateRemittanceResponseDto>()
                 .ForMember(dest => dest.RemitId, opt => opt.MapFrom(src => src.RemitId))
@@ -105,7 +103,6 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.RateApplied, opt => opt.MapFrom(src => src.RateApplied))
                 .ForMember(dest => dest.FeeApplied, opt => opt.MapFrom(src => src.FeeApplied))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate));
->>>>>>> Stashed changes
 
             // ===== AUDIT LOG MAPPINGS =====
 
@@ -363,7 +360,6 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
 
-<<<<<<< Updated upstream
             // ===== KYC RECORD MAPPINGS =====
 
             // Map CreateKYCRecordDto -> KYCRecord
@@ -492,6 +488,8 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
                 .ForMember(dest => dest.User, opt => opt.Ignore());
+
+            // ===== UPDATE STATUS DTOs (PATCH OPERATIONS) =====
 
             // UpdateCustomerRiskRatingDto and UpdateBeneficiaryVerificationStatusDto are DTO-only,
             // no entity mapping needed - values are directly assigned in service layer
@@ -534,7 +532,6 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.UploadedDate, opt => opt.MapFrom(src => src.UploadedDate))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate));
 
->>>>>>> Stashed changes
             // UpdateCustomerRiskRatingDto and UpdateBeneficiaryVerificationStatusDto are DTO-only,
             // no entity mapping needed - values are directly assigned in service layer
         }
