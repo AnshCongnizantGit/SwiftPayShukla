@@ -30,9 +30,9 @@ namespace SwiftPay.Config.Configuration
             builder.HasIndex(u => u.Phone)
                 .IsUnique();
 
-            builder.Property(u => u.Password)
+            builder.Property(u => u.PasswordHash)
                 .IsRequired()
-                .HasMaxLength(512);  // Increased to accommodate hashed passwords (e.g., BCrypt ~60 chars)
+                .HasMaxLength(128);  // BCrypt hashes ~60 chars; 128 is a safe ceiling
 
             // Store enum as string so it maps to VARCHAR(50)
             builder.Property(u => u.Status)

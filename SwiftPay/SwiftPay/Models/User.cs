@@ -13,7 +13,8 @@ namespace SwiftPay.Models
 
 		public string Phone { get; set; }
 
-		public string Password { get; set; }
+		// Hashed password (BCrypt). Only this is persisted.
+		public string? PasswordHash { get; set; }
 
 	public UserStatus Status { get; set; }
 

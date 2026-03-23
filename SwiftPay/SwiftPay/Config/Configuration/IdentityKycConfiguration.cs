@@ -29,10 +29,10 @@ namespace SwiftPay.Config.Configuration
                 .HasMaxLength(50);
             builder.HasIndex(u => u.Phone).IsUnique();
 
-            // Password
-            builder.Property(u => u.Password)
+            // PasswordHash (only the hash is stored)
+            builder.Property(u => u.PasswordHash)
                 .IsRequired()
-                .HasMaxLength(255);
+                .HasMaxLength(128);
 
             builder.Property(u => u.Status)
                 .HasConversion<string>()

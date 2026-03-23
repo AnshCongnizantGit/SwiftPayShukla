@@ -211,12 +211,24 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
                 // Status uses database default - don't set from mapper
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
-                .ForMember(dest => dest.UserRoles, opt => opt.Ignore());
+                .ForMember(dest => dest.UserRoles, opt => opt.Ignore())
+                // Do not map PasswordHash from DTOs automatically - service must set it explicitly
+                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
+
+            // Map RegisterUserDto -> User (for auth registration)
+            CreateMap<RegisterUserDto, User>()
+                .ForMember(dest => dest.UserId, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.UserRoles, opt => opt.Ignore())
+                // Ensure AutoMapper does not set PasswordHash from DTOs
+                .ForMember(dest => dest.PasswordHash, opt => opt.Ignore());
 
             // Map UpdateUserDto -> User (partial update)
             CreateMap<UpdateUserDto, User>()
                 .ForMember(dest => dest.UserId, opt => opt.Ignore())
-                .ForMember(dest => dest.Password, opt => opt.Ignore())
                 .ForMember(dest => dest.Status, opt => opt.Ignore())
                 .ForMember(dest => dest.CreatedAt, opt => opt.Ignore())
                 .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
@@ -238,7 +250,19 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.Status, opt => opt.MapFrom(src => src.Status))
                 .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
                 .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
-                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.UserRoles));
+                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.UserRoles))
+                .ForSourceMember(src => src.PasswordHash, opt => opt.DoNotValidate());
+
+            // Map User -> AuthResponseDto (safe user info for auth responses)
+            CreateMap<User, DTOs.UserCustomerDTO.AuthResponseDto>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.UserId))
+                .ForMember(dest => dest.Name, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email))
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone))
+                .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt))
+                .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt))
+                .ForMember(dest => dest.Roles, opt => opt.MapFrom(src => src.UserRoles))
+                .ForSourceMember(src => src.PasswordHash, opt => opt.DoNotValidate());
 
             // Map UserRole -> UserRoleDto
             CreateMap<UserRole, UserRoleDto>()
