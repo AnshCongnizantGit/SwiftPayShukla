@@ -28,6 +28,10 @@ namespace SwiftPay.Services
             // 2. Set the business logic defaults
             newLock.Status = RateLockStatus.Locked;
             newLock.LockStart = DateTime.UtcNow;
+            
+            // --- ADDED THIS LINE TO ENFORCE THE 15-MINUTE WINDOW ---
+            newLock.LockExpiry = DateTime.UtcNow.AddMinutes(15);
+            // -------------------------------------------------------
 
             // 3. Save to database
             var savedLock = await _repo.CreateRateLockAsync(newLock);
@@ -35,6 +39,7 @@ namespace SwiftPay.Services
             // 4. Map saved Model back to Response DTO
             return _mapper.Map<RateLockResponseDto>(savedLock);
         }
+        
         public async Task<RateLockResponseDto> GetRateLockAsync(string lockId)
         {
             var rateLock = await _repo.GetRateLockByIdAsync(lockId);

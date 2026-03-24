@@ -1,4 +1,5 @@
 using System;
+using System.Linq; // Added for LINQ filtering
 using System.Threading.Tasks;
 using AutoMapper;
 using SwiftPay.Constants.Enums;
@@ -13,18 +14,20 @@ namespace SwiftPay.Services
     {
         private readonly IFXQuoteRepository _repo;
         private readonly IMapper _mapper;
+        private readonly IFeeRuleRepository _feeRepo; 
 
-        public FXQuoteService(IFXQuoteRepository repo, IMapper mapper)
+        public FXQuoteService(IFXQuoteRepository repo, IMapper mapper, IFeeRuleRepository feeRepo)
         {
             _repo = repo;
             _mapper = mapper;
+            _feeRepo = feeRepo;
         }
 
         public async Task<FXQuoteResponseDto> GenerateQuoteAsync(CreateQuoteRequestDto request)
         {
             var newQuote = _mapper.Map<FXQuote>(request);
             
-            // 1. Identify the Corridor (e.g., "USD-INR")
+            // 1. Identify the Corridor (e.g., "EUR-INR")
             string corridor = $"{request.FromCurrency.ToUpper()}-{request.ToCurrency.ToUpper()}";
 
             // 2. Fetch the current market rate (Mid-Rate)
@@ -48,11 +51,27 @@ namespace SwiftPay.Services
             newQuote.ValidUntil = DateTime.UtcNow.AddMinutes(15);
             newQuote.Status = FXQuoteStatus.Active;
 
-            // 6. Save to Database
+            // 6. Save the PURE quote to Database (No fees saved here!)
             var savedQuote = await _repo.AddQuoteAsync(newQuote);
 
-            // 7. Return to Controller
-            return _mapper.Map<FXQuoteResponseDto>(savedQuote);
+            // 7. Map the database entity to our response envelope
+            var responseDto = _mapper.Map<FXQuoteResponseDto>(savedQuote);
+
+            // --- 8. THE MAGIC TRICK & TIE-BREAKER ---
+            var allRules = await _feeRepo.GetAllActiveFeeRulesAsync();
+            
+            // Ensure we grab the MOST RECENT rule for this corridor
+            var applicableRule = allRules
+                .Where(r => r.Corridor == corridor)
+                .OrderByDescending(r => r.CreatedDate) // Sort newest first
+                .FirstOrDefault();
+
+            // Slip the fee into the envelope (if no rule exists, default to 0)
+            responseDto.FeeApplied = applicableRule != null ? applicableRule.FeeValue : 0;
+            // ----------------------------------------
+
+            // 9. Return to Controller
+            return responseDto;
         }
 
         public async Task<FXQuoteResponseDto> GetQuoteAsync(string quoteId)
@@ -60,12 +79,23 @@ namespace SwiftPay.Services
             var quote = await _repo.GetQuoteByIdAsync(quoteId);
             if (quote == null) return null; 
 
-            return _mapper.Map<FXQuoteResponseDto>(quote);
+            var responseDto = _mapper.Map<FXQuoteResponseDto>(quote);
+            
+            string corridor = $"{quote.FromCurrency.ToUpper()}-{quote.ToCurrency.ToUpper()}";
+            var allRules = await _feeRepo.GetAllActiveFeeRulesAsync();
+            
+            // Apply the same tie-breaker logic here
+            var applicableRule = allRules
+                .Where(r => r.Corridor == corridor)
+                .OrderByDescending(r => r.CreatedDate) // Sort newest first
+                .FirstOrDefault();
+
+            responseDto.FeeApplied = applicableRule != null ? applicableRule.FeeValue : 0;
+
+            return responseDto;
         }
 
         // --- Private Helper Method ---
-        // In a production environment, this would call an external API like Bloomberg or Reuters.
-        // For our module, we will mock the live market data.
         private decimal GetMockMarketRate(string corridor)
         {
             return corridor switch

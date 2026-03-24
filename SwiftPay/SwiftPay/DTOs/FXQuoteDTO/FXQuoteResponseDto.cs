@@ -8,6 +8,11 @@ namespace SwiftPay.DTOs.FXQuoteDTO
         public string FromCurrency { get; set; }
         public string ToCurrency { get; set; }
         public decimal OfferedRate { get; set; }
+        
+        // --- ADDED THIS FIELD TO SEND TO THE FRONTEND ---
+        public decimal FeeApplied { get; set; }
+        // ------------------------------------------------
+        
         public DateTime ValidUntil { get; set; }
     }
 }

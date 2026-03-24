@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using SwiftPay.Constants.Enums;
 
 namespace SwiftPay.Models
@@ -16,15 +17,15 @@ namespace SwiftPay.Models
 		// Hashed password (BCrypt). Only this is persisted.
 		public string? PasswordHash { get; set; }
 
-	public UserStatus Status { get; set; }
+		public UserStatus Status { get; set; }
 
-	public bool IsDeleted { get; set; }
+		public bool IsDeleted { get; set; }
 
-	public DateTime CreatedAt { get; set; }
+		public DateTime CreatedAt { get; set; }
 
-	public DateTime UpdatedAt { get; set; }
+		public DateTime UpdatedAt { get; set; }
 
-	// Navigation
-	public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
+		// Navigation
+		public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
 	}
 }

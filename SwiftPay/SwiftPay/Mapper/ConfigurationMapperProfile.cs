@@ -548,6 +548,7 @@ namespace SwiftPay.Mapper
 
             // UpdateCustomerRiskRatingDto and UpdateBeneficiaryVerificationStatusDto are DTO-only,
             // no entity mapping needed - values are directly assigned in service layer
+         // RemitValidation -> RemitValidationDto
 
             // RemitValidation -> RemitValidationDto
             CreateMap<RemitValidation, RemitValidationDto>()
@@ -587,8 +588,58 @@ namespace SwiftPay.Mapper
                 .ForMember(dest => dest.UploadedDate, opt => opt.MapFrom(src => src.UploadedDate))
                 .ForMember(dest => dest.CreatedDate, opt => opt.MapFrom(src => src.CreatedDate));
 
-            // UpdateCustomerRiskRatingDto and UpdateBeneficiaryVerificationStatusDto are DTO-only,
-            // no entity mapping needed - values are directly assigned in service layer
+ 
+            // ==========================================
+            // MODULE 4.3: FX QUOTES, FEES & RATE LOCKS
+            // ==========================================
+
+            // CreateQuoteRequestDto -> FXQuote
+            CreateMap<SwiftPay.DTOs.FXQuoteDTO.CreateQuoteRequestDto, SwiftPay.FXModule.Api.Models.FXQuote>()
+                .ForMember(dest => dest.QuoteID, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.QuoteTime, opt => opt.Ignore())
+                .ForMember(dest => dest.ValidUntil, opt => opt.Ignore())
+                .ForMember(dest => dest.MidRate, opt => opt.Ignore())
+                .ForMember(dest => dest.MarginBps, opt => opt.Ignore())
+                .ForMember(dest => dest.OfferedRate, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
+
+            // FXQuote -> FXQuoteResponseDto
+            CreateMap<SwiftPay.FXModule.Api.Models.FXQuote, SwiftPay.DTOs.FXQuoteDTO.FXQuoteResponseDto>()
+                .ForMember(dest => dest.FeeApplied, opt => opt.Ignore());
+
+            // CreateFeeRuleRequestDto -> FeeRule
+            CreateMap<SwiftPay.DTOs.FXQuoteDTO.CreateFeeRuleRequestDto, SwiftPay.FXModule.Api.Models.FeeRule>()
+                .ForMember(dest => dest.FeeRuleID, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
+
+            // UpdateFeeRuleRequestDto -> FeeRule
+            CreateMap<SwiftPay.DTOs.FXQuoteDTO.UpdateFeeRuleRequestDto, SwiftPay.FXModule.Api.Models.FeeRule>()
+                .ForMember(dest => dest.FeeRuleID, opt => opt.Ignore())
+                .ForMember(dest => dest.Corridor, opt => opt.Ignore()) // Do not map Corridor on update
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
+
+            // FeeRule -> FeeRuleResponseDto
+            CreateMap<SwiftPay.FXModule.Api.Models.FeeRule, SwiftPay.DTOs.FXQuoteDTO.FeeRuleResponseDto>();
+
+            // CreateRateLockRequestDto -> RateLock
+            CreateMap<SwiftPay.DTOs.FXQuoteDTO.CreateRateLockRequestDto, SwiftPay.FXModule.Api.Models.RateLock>()
+                .ForMember(dest => dest.LockID, opt => opt.Ignore())
+                .ForMember(dest => dest.Status, opt => opt.Ignore())
+                .ForMember(dest => dest.LockStart, opt => opt.Ignore())
+                .ForMember(dest => dest.CreatedDate, opt => opt.Ignore())
+                .ForMember(dest => dest.UpdateDate, opt => opt.Ignore())
+                .ForMember(dest => dest.IsDeleted, opt => opt.Ignore());
+
+            // RateLock -> RateLockResponseDto
+            CreateMap<SwiftPay.FXModule.Api.Models.RateLock, SwiftPay.DTOs.FXQuoteDTO.RateLockResponseDto>();
         }
     }
 }

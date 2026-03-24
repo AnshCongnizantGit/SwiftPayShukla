@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization; // 1. Added authorization namespace
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using SwiftPay.DTOs.FXQuoteDTO;
@@ -7,6 +8,7 @@ namespace SwiftPay.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize(Roles = "Admin")] // 2. Locked down the entire controller to Admins only
     public class FeeRulesController : ControllerBase
     {
         private readonly IFeeRuleService _service;
@@ -22,8 +24,6 @@ namespace SwiftPay.Controllers
             var response = await _service.CreateFeeRuleAsync(request);
             return Ok(response);
         }
-
-
         
         [HttpGet]
         public async Task<IActionResult> GetActiveFeeRules()
@@ -31,6 +31,7 @@ namespace SwiftPay.Controllers
             var response = await _service.GetActiveFeeRulesAsync();
             return Ok(response);
         }
+
         [HttpPut("{id}")]
         public async Task<IActionResult> UpdateFeeRule(string id, [FromBody] UpdateFeeRuleRequestDto request)
         {

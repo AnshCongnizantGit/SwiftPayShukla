@@ -10,5 +10,9 @@ namespace SwiftPay.DTOs.FXQuoteDTO
         public string CustomerID { get; set; }
         public RateLockStatus Status { get; set; }
         public DateTime LockStart { get; set; }
+        
+        // --- ADDED THIS LINE FOR THE FRONTEND TIMER ---
+        public DateTime LockExpiry { get; set; } 
+        // ----------------------------------------------
     }
 }

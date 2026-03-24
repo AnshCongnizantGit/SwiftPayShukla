@@ -1,3 +1,4 @@
+using Microsoft.AspNetCore.Authorization; // 1. Added authorization namespace
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using SwiftPay.DTOs.FXQuoteDTO;
@@ -7,6 +8,7 @@ namespace SwiftPay.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
+    [Authorize] // 2. Locks the controller to any logged-in user
     public class FXQuotesController : ControllerBase
     {
         private readonly IFXQuoteService _service;
@@ -22,7 +24,6 @@ namespace SwiftPay.Controllers
             var response = await _service.GenerateQuoteAsync(request);
             return Ok(response); // Returns a 200 OK status with your JSON payload
         }
-
 
         [HttpGet("{id}")]
         public async Task<IActionResult> GetQuote(string id)
