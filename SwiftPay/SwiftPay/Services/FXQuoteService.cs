@@ -100,11 +100,26 @@ namespace SwiftPay.Services
         {
             return corridor switch
             {
+                // Major Inward Corridors (To INR)
                 "USD-INR" => 83.5025m,
                 "GBP-INR" => 105.7510m,
                 "EUR-INR" => 90.2050m,
                 "CAD-INR" => 61.3040m,
                 "AED-INR" => 22.7350m,
+                "AUD-INR" => 54.8020m,  // Australian Dollar
+                "SGD-INR" => 62.1550m,  // Singapore Dollar
+                "SAR-INR" => 22.2510m,  // Saudi Riyal
+                "JPY-INR" => 0.5520m,   // Japanese Yen
+                "CHF-INR" => 93.4010m,  // Swiss Franc
+                "NZD-INR" => 50.1200m,  // New Zealand Dollar
+
+                // Major Global Corridors
+                "EUR-USD" => 1.0820m,
+                "GBP-USD" => 1.2650m,
+                "USD-JPY" => 151.2000m,
+                "USD-CAD" => 1.3580m,
+                "AUD-USD" => 0.6550m,
+
                 _ => throw new Exception($"Unsupported currency corridor: {corridor}") 
             };
         }

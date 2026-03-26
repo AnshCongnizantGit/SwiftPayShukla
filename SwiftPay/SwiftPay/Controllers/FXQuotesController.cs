@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authorization; // 1. Added authorization namespace
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using SwiftPay.DTOs.FXQuoteDTO;
@@ -8,7 +8,7 @@ namespace SwiftPay.Controllers
 {
     [ApiController]
     [Route("api/[controller]")]
-    [Authorize] // 2. Locks the controller to any logged-in user
+    [Authorize] // 1. BASE REQUIREMENT: Anyone accessing this controller must be logged in.
     public class FXQuotesController : ControllerBase
     {
         private readonly IFXQuoteService _service;
@@ -19,13 +19,17 @@ namespace SwiftPay.Controllers
         }
 
         [HttpPost]
+        // 2. CREATE RULE: Strictly locked to Customers only. Admins will get a 403 Forbidden here.
+        [Authorize(Roles = "Customer")] 
         public async Task<IActionResult> CreateQuote([FromBody] CreateQuoteRequestDto request)
         {
             var response = await _service.GenerateQuoteAsync(request);
-            return Ok(response); // Returns a 200 OK status with your JSON payload
+            return Ok(response); 
         }
 
         [HttpGet("{id}")]
+        // 3. READ RULE: Both Customers and Admins can view the quote. (Note: No spaces in the string!)
+        [Authorize(Roles = "Customer,Admin")] 
         public async Task<IActionResult> GetQuote(string id)
         {
             var response = await _service.GetQuoteAsync(id);
