@@ -4,6 +4,7 @@ namespace SwiftPay.Constants.Enums
     {
         Requested = 0,
         Approved = 1,
-        Posted = 2
+        Posted = 2,
+        Rejected = 3
     }
 }

@@ -169,6 +169,7 @@ namespace SwiftPay.Controllers
 		/// <summary>
 		/// Agent / Admin approves a customer-submitted remittance: marks it Paid and
 		/// notifies the customer that their payment has completed.
+		/// Requires status == Validated (compliance must have approved first).
 		/// </summary>
 		[HttpPost("{remitId:int}/approve")]
 		[Authorize(Roles = "Agent,Admin")]
@@ -184,6 +185,17 @@ namespace SwiftPay.Controllers
 				if (existing.Status == "Cancelled" || existing.Status == "Refunded")
 					return Conflict(new { message = $"Remittance is {existing.Status} and cannot be approved." });
 
+				// Compliance gate: agent can only approve once compliance has cleared the remittance.
+				// PendingCompliance = documents uploaded, waiting for compliance review.
+				// ComplianceHold    = compliance flagged it, must be resolved first.
+				if (existing.Status == "PendingCompliance")
+					return Conflict(new { message = "Remittance is pending compliance review. A compliance analyst must approve it before the agent can process it." });
+				if (existing.Status == "ComplianceHold")
+					return Conflict(new { message = "Remittance is on Compliance Hold. The compliance team must resolve this hold before it can be approved." });
+				if (existing.Status == "Draft" || existing.Status == "AwaitingDocuments")
+					return Conflict(new { message = $"Remittance is still in {existing.Status} state. It must be validated and compliance-cleared before approval." });
+
+				// Only Validated status reaches here → safe to approve
 				await _remittanceService.UpdateVerificationStatusByRemitIdAsync(remitId, RemittanceRequestStatus.Paid);
 
 				var notifyUserId = await ResolveNotifyUserIdAsync(remitId);
@@ -262,7 +274,8 @@ namespace SwiftPay.Controllers
 		public async Task<IActionResult> GetAll()
 		{
 			var remittances = await _remittanceService.GetAllAsync();
-			return Ok(remittances.Where(r => !r.IsDeleted).ToList());
+			var result = remittances.Where(r => !r.IsDeleted).ToList();
+			return Ok(new { message = "Remittances retrieved successfully.", data = result });
 		}
 
 		/// <summary>
@@ -348,6 +361,6 @@ namespace SwiftPay.Controllers
 		}
 
 
-		}
-
 	}
+
+}

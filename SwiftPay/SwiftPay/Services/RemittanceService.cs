@@ -20,12 +20,14 @@ namespace SwiftPay.Services
 		private readonly IRemittanceRepository _repo;
 		private readonly IRemitValidationRepository _validationRepo;
 		private readonly IMapper _mapper;
+		private readonly IFXQuoteRepository _quoteRepo;
 
-		public RemittanceService(IRemittanceRepository repo, IRemitValidationRepository validationRepo, IMapper mapper)
+		public RemittanceService(IRemittanceRepository repo, IRemitValidationRepository validationRepo, IMapper mapper, IFXQuoteRepository quoteRepo)
 		{
 			_repo = repo;
 			_validationRepo = validationRepo;
 			_mapper = mapper;
+			_quoteRepo = quoteRepo;
 		}
 
 		public async Task<List<CreateRemittanceResponseDto>> GetByCustomerRemittancesAsync(int customerId, int page, int limit, string? status = null)
@@ -65,15 +67,33 @@ namespace SwiftPay.Services
 
 		/// <summary>
 		/// Creates a remittance in Draft state.
+		/// ReceiverAmount, RateApplied and FeeApplied are derived from the linked FX quote,
+		/// not accepted from the client, keeping the DTO aligned with the SRS spec.
 		/// </summary>
 		public async Task<CreateRemittanceResponseDto> CreateAsync(CreateRemittanceDto dto)
 		{
+			// Look up the quote to copy rate/fee/receiverAmount onto the remittance.
+			// Per SRS, these fields live on the quote entity, not on the create request.
+			decimal? receiverAmount = null;
+			decimal? rateApplied = null;
+			decimal? feeApplied = null;
+
+			if (!string.IsNullOrWhiteSpace(dto.QuoteId))
+			{
+				var quote = await _quoteRepo.GetQuoteByIdAsync(dto.QuoteId);
+				if (quote != null)
+				{
+					receiverAmount = quote.ReceiverAmount;
+					rateApplied = quote.OfferedRate;
+					feeApplied = quote.Fee;
+				}
+			}
+
 			var remittance = new RemittanceRequest
 			{
 				// IDs - Use only the IDs, let EF handle the relationship
 				CustomerId = dto.CustomerId,
 				BeneficiaryId = dto.BeneficiaryId,
-
 
 				// Currencies - Ensure these aren't null!
 				FromCurrency = dto.FromCurrency ?? "USD",
@@ -83,6 +103,12 @@ namespace SwiftPay.Services
 				SendAmount = dto.SendAmount,
 				PurposeCode = dto.PurposeCode,
 				SourceOfFunds = dto.SourceOfFunds,
+
+				// Quote linkage — QuoteId stored for reference; derived fields fetched from quote above
+				QuoteId = dto.QuoteId,
+				ReceiverAmount = receiverAmount,
+				RateApplied = rateApplied,
+				FeeApplied = feeApplied,
 
 				// Metadata
 				Status = RemittanceRequestStatus.Draft,
@@ -337,14 +363,8 @@ namespace SwiftPay.Services
 		public async Task<IEnumerable<CreateRemittanceResponseDto>> GetAllAsync()
 		{
 			var remittances = await _repo.GetAllAsync();
-			return remittances.Select(r => new CreateRemittanceResponseDto
-			{
-				RemitId = r.RemitId,
-				CustomerId = r.CustomerId,
-				Amount = r.SendAmount,
-				Status = r.Status.ToString(),
-				IsDeleted = r.IsDeleted
-			});
+			// Use AutoMapper to map ALL fields (FromCurrency, ToCurrency, SendAmount, CreatedDate, etc.)
+			return _mapper.Map<List<CreateRemittanceResponseDto>>(remittances);
 		}
 
 		public async Task UpdateVerificationStatusByRemitIdAsync(int remitId, RemittanceRequestStatus status)

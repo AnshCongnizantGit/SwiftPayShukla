@@ -52,6 +52,7 @@ namespace SwiftPay.Services
 
             var newQuote = new FXQuote
             {
+                CustomerID = request.CustomerID,
                 FromCurrency = fromCcy,
                 ToCurrency = toCcy,
                 SendAmount = request.SendAmount,

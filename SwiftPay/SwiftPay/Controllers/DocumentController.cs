@@ -57,7 +57,7 @@ namespace SwiftPay.Controllers
 		}
 
 		[HttpGet]
-		[Authorize(Roles = "Agent,Compliance,Admin")]
+		[Authorize(Roles = "Customer,Agent,Compliance,Admin,Ops")]
 		public async Task<IActionResult> GetByRemitId([FromQuery] int remitId)
 		{
 			try

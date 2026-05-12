@@ -28,7 +28,7 @@ namespace SwiftPay.Controllers
 		/// <param name="dto">Batch generation parameters (period start/end, corridor, etc.).</param>
 		/// <returns>HTTP 201 with the created SettlementBatch or HTTP 400 if validation fails.</returns>
 		[HttpPost("generate")]
-		[Authorize(Roles = "Treasury, Admin")] 
+		[Authorize(Roles = "Treasury, Admin, Ops")] 
 		public async Task<ActionResult<SettlementBatch>> GenerateBatch([FromBody] GenerateBatchDto dto)
 		{
 			// 1. Basic Input Validation

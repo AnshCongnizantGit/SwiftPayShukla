@@ -47,10 +47,18 @@ namespace SwiftPay.Services
 
 			var allInstructions = await _context.PayoutInstructions.ToListAsync();
 
+			// Fix: batch.PeriodStart/End are stored as DateTime (datetime2, Kind=Unspecified).
+			// PayoutInstruction.SentDate is DateTimeOffset (datetimeoffset).
+			// Comparing DateTimeOffset with Unspecified DateTime causes C# to treat the DateTime
+			// as local time, which shifts the range and excludes valid instructions.
+			// Explicitly treat the stored batch dates as UTC to match GETUTCDATE() SentDates.
+			var periodStart = new DateTimeOffset(batch.PeriodStart, TimeSpan.Zero);
+			var periodEnd = new DateTimeOffset(batch.PeriodEnd, TimeSpan.Zero);
+
 			var settledInstructions = allInstructions
 				.Where(p => p.PartnerStatus == PayOutInstructionStatus.Settled
-						 && p.SentDate >= batch.PeriodStart
-						 && p.SentDate <= batch.PeriodEnd)
+						 && p.SentDate >= periodStart
+						 && p.SentDate <= periodEnd)
 				.ToList();
 
 			var remitIds = settledInstructions.Select(i => i.RemitId.Trim()).ToList();
@@ -74,9 +82,9 @@ namespace SwiftPay.Services
 				throw new Exception($"CRITICAL: We found 0 matching transactions for Batch {batchId} in the database. Halting reconciliation to prevent false success.");
 			}
 
-			
+
 			// THE RECONCILIATION LOOP
-			
+
 			var records = new List<ReconciliationRecord>();
 			const decimal tolerance = 0.01m;
 			bool hasDiscrepancy = false;
@@ -109,9 +117,9 @@ namespace SwiftPay.Services
 				records.Add(savedRecord);
 			}
 
-		
+
 			//  STATUS GATEKEEPER & TIMESTAMP FIX
-			
+
 			if (hasDiscrepancy)
 			{
 				batch.Status = Status.Open; // Hold it open!
@@ -121,7 +129,7 @@ namespace SwiftPay.Services
 				batch.Status = Status.Reconciled;
 			}
 
-			
+
 			batch.UpdateDate = DateTime.UtcNow;
 
 			await _settleRepo.UpdateAsync(batch);
@@ -141,7 +149,7 @@ namespace SwiftPay.Services
 		/// <exception cref="KeyNotFoundException">Thrown if the specified remittance or payout instruction, or a required linked record, cannot be found for the
 		/// given reference identifier.</exception>
 		/// <exception cref="NotSupportedException">Thrown if the provided reference type is not supported for reconciliation.</exception>
-	
+
 		public async Task<ReconciliationRecord> AutoReconcileAsync(ReferenceType type, string referenceId)
 		{
 			RemittanceRequest remit = null;
@@ -220,16 +228,16 @@ namespace SwiftPay.Services
 			}
 		}
 
-	  /// <summary>
-	  /// Asynchronously creates a new reconciliation record using the specified data transfer object.
-	  /// </summary>
-	  /// <param name="dto">The data transfer object containing the information required to create a reconciliation record. Cannot be null.</param>
-	  /// <returns>A task that represents the asynchronous operation. The task result contains the created reconciliation record.</returns>
+		/// <summary>
+		/// Asynchronously creates a new reconciliation record using the specified data transfer object.
+		/// </summary>
+		/// <param name="dto">The data transfer object containing the information required to create a reconciliation record. Cannot be null.</param>
+		/// <returns>A task that represents the asynchronous operation. The task result contains the created reconciliation record.</returns>
 		public async Task<ReconciliationRecord> CreateAsync(CreateReconciliationDto dto)
 		{
 			var entity = _mapper.Map<ReconciliationRecord>(dto);
 
-			
+
 
 			return await _repo.CreateAsync(entity);
 		}

@@ -11,7 +11,7 @@ namespace SwiftPay.DTOs.RemittanceDTO
         [Required]
         public DocumentType DocType { get; set; }
 
-        [StringLength(2048)]
+        
         public string? FileURI { get; set; }
     }
 }

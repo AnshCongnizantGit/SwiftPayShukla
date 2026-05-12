@@ -33,10 +33,14 @@ namespace SwiftPay.Services
 			// 2. Fetch Settled Instructions (In-Memory to bypass EF translation bugs)
 			var allInstructions = await _context.PayoutInstructions.ToListAsync();
 
+			// Normalise to UTC DateTimeOffset so comparison with SentDate (datetimeoffset, GETUTCDATE) is consistent.
+			var periodStart = dto.PeriodStart.ToUniversalTime();
+			var periodEnd = dto.PeriodEnd.ToUniversalTime();
+
 			var settledInstructions = allInstructions
 				.Where(p => p.PartnerStatus == PayOutInstructionStatus.Settled
-						 && p.SentDate >= dto.PeriodStart
-						 && p.SentDate <= dto.PeriodEnd)
+						 && p.SentDate >= periodStart
+						 && p.SentDate <= periodEnd)
 				.ToList();
 
 			if (!settledInstructions.Any())
@@ -98,7 +102,7 @@ namespace SwiftPay.Services
 
 		public async Task<bool> DeleteAsync(int id)
 		{
-		
+
 			var batch = await _repo.GetByIdAsync(id);
 			if (batch == null) return false;
 
@@ -107,13 +111,13 @@ namespace SwiftPay.Services
 				throw new InvalidOperationException($"CRITICAL: Batch {id} is already Reconciled. It is locked for auditing and cannot be deleted.");
 			}
 
-		
+
 			batch.IsDeleted = true;
 			batch.UpdateDate = DateTime.UtcNow;
 
 			await _repo.UpdateAsync(batch);
 
-			
+
 
 			return true;
 		}
