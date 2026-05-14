@@ -10,8 +10,8 @@ namespace SwiftPay.DTOs.FXQuoteDTO
         public decimal FeeValue { get; set; }
         public decimal MinFee { get; set; }
         public decimal MaxFee { get; set; }
-        public DateTime EffectiveFrom { get; set; }
-        public DateTime EffectiveTo { get; set; }
+        public DateTime? EffectiveFrom { get; set; }
+        public DateTime? EffectiveTo { get; set; }
         public RuleStatus Status { get; set; }
     }
 }

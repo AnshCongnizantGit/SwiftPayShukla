@@ -1,3 +1,4 @@
 <Solution>
+  <Project Path="Swiftpay.Tests/Swiftpay.Tests.csproj" Id="2d71e195-456c-4582-99b1-06686549ad00" />
   <Project Path="SwiftPay/SwiftPay.csproj" />
 </Solution>

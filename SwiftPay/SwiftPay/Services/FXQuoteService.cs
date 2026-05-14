@@ -70,16 +70,18 @@ namespace SwiftPay.Services
 
             return new FXQuoteResponseDto
             {
-                QuoteId = savedQuote.QuoteID,
-                FromCurrency = savedQuote.FromCurrency,
-                ToCurrency = savedQuote.ToCurrency,
-                SendAmount = savedQuote.SendAmount,
+                QuoteId        = savedQuote.QuoteID,
+                FromCurrency   = savedQuote.FromCurrency,
+                ToCurrency     = savedQuote.ToCurrency,
+                SendAmount     = savedQuote.SendAmount,
                 ReceiverAmount = savedQuote.ReceiverAmount,
-                MidRate = savedQuote.MidRate,
-                MarginBps = savedQuote.MarginBps,
-                OfferedRate = savedQuote.OfferedRate,
-                Fee = savedQuote.Fee,
-                ValidUntil = savedQuote.ValidUntil
+                MidRate        = savedQuote.MidRate,
+                MarginBps      = savedQuote.MarginBps,
+                OfferedRate    = savedQuote.OfferedRate,
+                Fee            = savedQuote.Fee,
+                QuoteTime      = savedQuote.QuoteTime,
+                ValidUntil     = savedQuote.ValidUntil,
+                Status         = savedQuote.Status.ToString(),
             };
         }
 
@@ -98,16 +100,18 @@ namespace SwiftPay.Services
 
             return new FXQuoteResponseDto
             {
-                QuoteId = quote.QuoteID,
-                FromCurrency = quote.FromCurrency,
-                ToCurrency = quote.ToCurrency,
-                SendAmount = quote.SendAmount,
+                QuoteId        = quote.QuoteID,
+                FromCurrency   = quote.FromCurrency,
+                ToCurrency     = quote.ToCurrency,
+                SendAmount     = quote.SendAmount,
                 ReceiverAmount = quote.ReceiverAmount,
-                MidRate = quote.MidRate,
-                MarginBps = quote.MarginBps,
-                OfferedRate = quote.OfferedRate,
-                Fee = applicableRule?.FeeValue ?? quote.Fee,
-                ValidUntil = quote.ValidUntil
+                MidRate        = quote.MidRate,
+                MarginBps      = quote.MarginBps,
+                OfferedRate    = quote.OfferedRate,
+                Fee            = applicableRule?.FeeValue ?? quote.Fee,
+                QuoteTime      = quote.QuoteTime,
+                ValidUntil     = quote.ValidUntil,
+                Status         = quote.Status.ToString(),
             };
         }
 
@@ -116,16 +120,18 @@ namespace SwiftPay.Services
             var all = await _repo.GetAllQuotesAsync();
             return all.Select(q => new FXQuoteResponseDto
             {
-                QuoteId      = q.QuoteID,
-                FromCurrency = q.FromCurrency,
-                ToCurrency   = q.ToCurrency,
-                SendAmount   = q.SendAmount,
+                QuoteId        = q.QuoteID,
+                FromCurrency   = q.FromCurrency,
+                ToCurrency     = q.ToCurrency,
+                SendAmount     = q.SendAmount,
                 ReceiverAmount = q.ReceiverAmount,
-                MidRate      = q.MidRate,
-                MarginBps    = q.MarginBps,
-                OfferedRate  = q.OfferedRate,
-                Fee          = q.Fee,
-                ValidUntil   = q.ValidUntil,
+                MidRate        = q.MidRate,
+                MarginBps      = q.MarginBps,
+                OfferedRate    = q.OfferedRate,
+                Fee            = q.Fee,
+                QuoteTime      = q.QuoteTime,
+                ValidUntil     = q.ValidUntil,
+                Status         = q.Status.ToString(),
             });
         }
 

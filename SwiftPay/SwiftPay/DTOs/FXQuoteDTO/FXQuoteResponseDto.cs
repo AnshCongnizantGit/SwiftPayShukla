@@ -13,6 +13,8 @@ namespace SwiftPay.DTOs.FXQuoteDTO
         public int MarginBps { get; set; }
         public decimal OfferedRate { get; set; }
         public decimal Fee { get; set; }
+        public DateTime QuoteTime { get; set; }
         public DateTime ValidUntil { get; set; }
+        public string Status { get; set; }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using AutoMapper;
@@ -22,39 +23,39 @@ namespace SwiftPay.Services
 
         public async Task<FeeRuleResponseDto> CreateFeeRuleAsync(CreateFeeRuleRequestDto request)
         {
-            // 1. Map Request DTO to Database Model
             var newRule = _mapper.Map<FeeRule>(request);
-            
-            // Set defaults that aren't provided by the user
-            newRule.Status = RuleStatus.Active;
 
-            // 2. Save to Database
+            // Apply sensible defaults for optional dates so the non-nullable DB column is always satisfied.
+            newRule.EffectiveFrom = request.EffectiveFrom?.ToUniversalTime() ?? DateTime.UtcNow.Date;
+            newRule.EffectiveTo   = request.EffectiveTo?.ToUniversalTime()   ?? DateTime.UtcNow.Date.AddYears(10);
+            newRule.Status        = RuleStatus.Active;
+
             var savedRule = await _repo.AddFeeRuleAsync(newRule);
-
-            // 3. Map saved Model back to Response DTO
             return _mapper.Map<FeeRuleResponseDto>(savedRule);
         }
+
         public async Task<IEnumerable<FeeRuleResponseDto>> GetActiveFeeRulesAsync()
         {
             var rules = await _repo.GetAllActiveFeeRulesAsync();
             return _mapper.Map<IEnumerable<FeeRuleResponseDto>>(rules);
         }
+
         public async Task<FeeRuleResponseDto> UpdateFeeRuleAsync(string id, UpdateFeeRuleRequestDto request)
         {
-            // 1. Find the existing rule
             var existingRule = await _repo.GetFeeRuleByIdAsync(id);
             if (existingRule == null) return null;
 
-            // 2. Map the new values over the existing rule
             _mapper.Map(request, existingRule);
-            
-            // 3. Update the audit timestamp
+
+            // Preserve existing dates when not explicitly changed.
+            if (request.EffectiveFrom.HasValue)
+                existingRule.EffectiveFrom = request.EffectiveFrom.Value.ToUniversalTime();
+            if (request.EffectiveTo.HasValue)
+                existingRule.EffectiveTo = request.EffectiveTo.Value.ToUniversalTime();
+
             existingRule.UpdateDate = DateTime.UtcNow;
 
-            // 4. Save to database
             await _repo.UpdateFeeRuleAsync(existingRule);
-
-            // 5. Return updated DTO
             return _mapper.Map<FeeRuleResponseDto>(existingRule);
         }
 
@@ -63,9 +64,8 @@ namespace SwiftPay.Services
             var existingRule = await _repo.GetFeeRuleByIdAsync(id);
             if (existingRule == null) return false;
 
-            // Perform a "Soft Delete"
-            existingRule.IsDeleted = true;
-            existingRule.Status = RuleStatus.Inactive;
+            existingRule.IsDeleted  = true;
+            existingRule.Status     = RuleStatus.Inactive;
             existingRule.UpdateDate = DateTime.UtcNow;
 
             await _repo.UpdateFeeRuleAsync(existingRule);
